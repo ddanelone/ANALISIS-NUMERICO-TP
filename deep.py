@@ -55,16 +55,19 @@ def filtro_pasa_bajos(data, cutoff, fs, order=5):
 cutoff = 40.0  # Hz
 senales_filtradas = [filtro_pasa_bajos(s, cutoff, fs) for s in senales]
 
-# Visualización de señales filtradas solamente
+# Visualización de señales originales vs filtradas
 plt.figure(figsize=(15, 8))
 for i in range(3):
     plt.subplot(3, 1, i + 1)
-    plt.plot(t, senales_filtradas[i], color='tab:blue', linewidth=1.2)
-    plt.title(f'Señal {i + 1} Filtrada (Low-pass 40 Hz)')
+    plt.plot(t, senales[i], label='Original', color='black', alpha=0.5, linewidth=1.0)
+    plt.plot(t, senales_filtradas[i], label='Filtrada (Low-pass 40 Hz)', color='tab:blue', linewidth=1.5)
+    plt.title(f'Señal {i + 1} - Comparativa')
     plt.xlabel('Tiempo [s]')
     plt.ylabel('Amplitud [u.a.]')
+    plt.legend(loc='upper right')
 plt.tight_layout()
 plt.show()
+
 
 
 # 3. FFT
