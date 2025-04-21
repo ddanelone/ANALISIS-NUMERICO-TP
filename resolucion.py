@@ -10,6 +10,10 @@ import seaborn as sns
 sns.set_theme(style="darkgrid")
 fs = 173.61  # Frecuencia de muestreo en Hz
 
+# Validamos que cumplimos con el Criterio de Nyquist
+assert fs >= 2 * 50, "La frecuencia de muestreo debe ser al menos el doble de la frecuencia máxima de interés (50 Hz)"
+
+
 # Constantes para las etiquetas de etapas
 ETAPAS = {
     0: 'Registro sano',
