@@ -149,7 +149,7 @@ plt.tight_layout()
 plt.show()
 
 # 6. Análisis de bandas de frecuencia
-def analizar_bandas(f, pxx, nombre_senal):
+def analizar_bandas(f, pxx, nombre_senal, etapa):
     bandas = {
         'Delta (0.5-4 Hz)': (0.5, 4),
         'Theta (4-8 Hz)': (4, 8),
@@ -157,7 +157,7 @@ def analizar_bandas(f, pxx, nombre_senal):
         'Beta (13-30 Hz)': (13, 30),
         'Gamma (30-50 Hz)': (30, 50)
     }
-    print(f"\n🔍 Análisis de bandas para {nombre_senal}:")
+    print(f"\n🔍 Análisis de bandas para {nombre_senal} ({etapa}):")
     total = trapezoid(Pxx, f)
     for nombre, (low, high) in bandas.items():
         mask = (f >= low) & (f <= high)
@@ -207,4 +207,5 @@ plt.show()
 
 
 for i, (f, Pxx) in enumerate(potencias):
-    analizar_bandas(f, Pxx, f"Señal {i + 1}")
+    etapa = ETAPAS[i]
+    analizar_bandas(f, Pxx, f"Señal {i + 1}", etapa)
