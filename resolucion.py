@@ -7,8 +7,15 @@ from scipy.integrate import trapezoid
 import seaborn as sns
 
 # Configuración general
-sns.set(style="darkgrid")
+sns.set_theme(style="darkgrid")
 fs = 173.61  # Frecuencia de muestreo en Hz
+
+# Constantes para las etiquetas de etapas
+ETAPAS = {
+    0: 'Registro sano',
+    1: 'Registro interictal',
+    2: 'Registro convulsivo'
+}
 
 # Función para cargar los datos desde archivo
 def cargar_senal(nombre_archivo):
@@ -36,12 +43,12 @@ def graficar_senales(senales, titulos, xlabel, ylabel, tiempo=None):
 graficar_senales(
     senales,
     [
-        'Señal 1 - Registro crudo en el dominio del tiempo',
-        'Señal 2 - Registro crudo en el dominio del tiempo',
-        'Señal 3 - Registro crudo en el dominio del tiempo'
+        'Señal 1 (Sano) - Registro crudo en el dominio del tiempo',
+        'Señal 2 (Interictal) - Registro crudo en el dominio del tiempo',
+        'Señal 3 (Convulsión) - Registro crudo en el dominio del tiempo'
     ],
     'Tiempo [s]',
-    'Amplitud [u.a.]',
+    'Amplitud',
     t
 )
 
@@ -58,12 +65,13 @@ senales_filtradas = [filtro_pasa_bajos(s, cutoff, fs) for s in senales]
 # Visualización de señales originales vs filtradas
 plt.figure(figsize=(15, 8))
 for i in range(3):
+    etapa = ETAPAS[i]  
     plt.subplot(3, 1, i + 1)
     plt.plot(t, senales[i], label='Original', color='black', alpha=0.5, linewidth=1.0)
     plt.plot(t, senales_filtradas[i], label='Filtrada (Low-pass 40 Hz)', color='tab:blue', linewidth=1.5)
-    plt.title(f'Señal {i + 1} - Comparativa')
+    plt.title(f'Señal {i + 1} ({etapa}) - Comparativa')
     plt.xlabel('Tiempo [s]')
-    plt.ylabel('Amplitud [u.a.]')
+    plt.ylabel('Amplitud')
     plt.legend(loc='upper right')
 plt.tight_layout()
 plt.show()
@@ -80,9 +88,10 @@ ffts = [calcular_fft(s, fs) for s in senales_filtradas]
 # Visualización de FFT
 plt.figure(figsize=(15, 8))
 for i, (xf, yf) in enumerate(ffts):
+    etapa = ETAPAS[i]
     plt.subplot(3, 1, i + 1)
     plt.plot(xf, yf)
-    plt.title(f'Señal {i + 1} - Espectro de Frecuencia (FFT)')
+    plt.title(f'Señal {i + 1} ({etapa}) - Espectro de Frecuencia (FFT)')
     plt.xlabel('Frecuencia [Hz]')
     plt.ylabel('Magnitud [u.a.]')
     plt.xlim(0, 50)
@@ -101,9 +110,10 @@ for xf, yf in ffts:
 # Visualización de potencia espectral
 plt.figure(figsize=(15, 8))
 for i, (f, Pxx) in enumerate(potencias):
+    etapa = ETAPAS[i]
     plt.subplot(3, 1, i + 1)
     plt.semilogy(f, Pxx)
-    plt.title(f'Señal {i + 1} - Densidad Espectral de Potencia (Estimación por FFT)')
+    plt.title(f'Señal {i + 1} ({etapa}) - Densidad Espectral de Potencia (Estimación por FFT)')
     plt.xlabel('Frecuencia [Hz]')
     plt.ylabel('Potencia [u.a./Hz]')
     plt.xlim(0, 50)
@@ -123,9 +133,15 @@ t_autocorr = np.arange(len(autocorrelaciones[0])) / fs
 # Visualización de autocorrelación
 plt.figure(figsize=(15, 8))
 for i, ac in enumerate(autocorrelaciones):
+    if i == 0:
+        etapa = 'Registro sano'
+    elif i == 1:
+         etapa = 'Registro interictal'
+    else:
+        etapa = 'Registro convulsivo'
     plt.subplot(3, 1, i + 1)
     plt.plot(t_autocorr, ac)
-    plt.title(f'Señal {i + 1} - Función de Autocorrelación Normalizada')
+    plt.title(f'Señal {i + 1} ({etapa}) - Función de Autocorrelación Normalizada')
     plt.xlabel('Retardo [s]')
     plt.ylabel('Correlación normalizada')
     plt.xlim(0, 2)
@@ -133,7 +149,7 @@ plt.tight_layout()
 plt.show()
 
 # 6. Análisis de bandas de frecuencia
-def analizar_bandas(f, Pxx, nombre_senal):
+def analizar_bandas(f, pxx, nombre_senal):
     bandas = {
         'Delta (0.5-4 Hz)': (0.5, 4),
         'Theta (4-8 Hz)': (4, 8),
@@ -145,7 +161,7 @@ def analizar_bandas(f, Pxx, nombre_senal):
     total = trapezoid(Pxx, f)
     for nombre, (low, high) in bandas.items():
         mask = (f >= low) & (f <= high)
-        potencia = trapezoid(Pxx[mask], f[mask])
+        potencia = trapezoid(pxx[mask], f[mask])
         porcentaje = (potencia / total) * 100
         print(f"{nombre}: {potencia:.4f} ({porcentaje:.2f} % de la potencia total)")
         
