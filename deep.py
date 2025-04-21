@@ -68,8 +68,6 @@ for i in range(3):
 plt.tight_layout()
 plt.show()
 
-
-
 # 3. FFT
 def calcular_fft(senal, fs):
     n = len(senal)
@@ -91,24 +89,27 @@ for i, (xf, yf) in enumerate(ffts):
 plt.tight_layout()
 plt.show()
 
-# 4. Potencia espectral (Welch)
-def calcular_potencia_espectral(senal, fs):
-    f, Pxx = welch(senal, fs, nperseg=1024)
-    return f, Pxx
+# 4. Potencia espectral usando FFT simple (PSD aproximada)
+# Reutiliza la FFT ya calculada para estimar la potencia espectral
 
-potencias = [calcular_potencia_espectral(s, fs) for s in senales_filtradas]
+potencias = []
+for xf, yf in ffts:
+    # Estimación de densidad espectral de potencia (PSD)
+    Pxx = (yf ** 2) / fs
+    potencias.append((xf, Pxx))
 
 # Visualización de potencia espectral
 plt.figure(figsize=(15, 8))
 for i, (f, Pxx) in enumerate(potencias):
     plt.subplot(3, 1, i + 1)
     plt.semilogy(f, Pxx)
-    plt.title(f'Señal {i + 1} - Densidad Espectral de Potencia (Método de Welch)')
+    plt.title(f'Señal {i + 1} - Densidad Espectral de Potencia (Estimación por FFT)')
     plt.xlabel('Frecuencia [Hz]')
-    plt.ylabel('Potencia [V²/Hz]')
+    plt.ylabel('Potencia [u.a./Hz]')
     plt.xlim(0, 50)
 plt.tight_layout()
 plt.show()
+
 
 # 5. Autocorrelación
 def calcular_autocorrelacion(senal):
