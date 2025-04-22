@@ -84,8 +84,8 @@ plt.show()
 def calcular_fft(senal, fs):
     n = len(senal)
     yf = fft(senal)
-    xf = fftfreq(n, 1/fs)[:n//2]
-    return xf, 2.0/n * np.abs(yf[0:n//2])
+    xf = fftfreq(n, 1/fs)[:n//2]  # estamos usando la propiedad de simetría de la FFT cortando la señal a la mitad porque la otra mitad es redundante
+    return xf, 2.0/n * np.abs(yf[0:n//2]) # devolvemos el módulo, pero lo normalizamos a la mitad porque estamos usando sólo el 50% de la FFT
 
 ffts = [calcular_fft(s, fs) for s in senales_filtradas]
 
@@ -93,12 +93,30 @@ ffts = [calcular_fft(s, fs) for s in senales_filtradas]
 plt.figure(figsize=(15, 8))
 for i, (xf, yf) in enumerate(ffts):
     etapa = ETAPAS[i]
+    mask = xf <= 40  # Solo mostrar hasta 40 Hz
     plt.subplot(3, 1, i + 1)
-    plt.plot(xf, yf)
+    plt.plot(xf[mask], yf[mask])
     plt.title(f'Señal {i + 1} ({etapa}) - Espectro de Frecuencia (FFT)')
     plt.xlabel('Frecuencia [Hz]')
     plt.ylabel('Magnitud [u.a.]')
-    plt.xlim(0, 50)
+    plt.grid(True)
+    plt.autoscale(enable=True, axis='y')  # Autoajusta el eje Y solo a lo visible
+plt.tight_layout()
+plt.show()
+
+# Diagrama de tallo con recorte explícito a 40 Hz
+plt.figure(figsize=(15, 8))
+for i, (xf, yf) in enumerate(ffts):
+    etapa = ETAPAS[i]
+    mask = xf <= 40
+    plt.subplot(3, 1, i + 1)
+    markerline, stemlines, baseline = plt.stem(xf[mask], yf[mask], linefmt='tab:blue', markerfmt=' ', basefmt=' ')
+    plt.setp(stemlines, linewidth=1.5)
+    plt.title(f'Señal {i + 1} ({etapa}) - Espectro de Frecuencia (FFT - Diagrama de tallo)')
+    plt.xlabel('Frecuencia [Hz]')
+    plt.ylabel('Magnitud [u.a.]')
+    plt.grid(True)
+    plt.autoscale(enable=True, axis='y')
 plt.tight_layout()
 plt.show()
 
