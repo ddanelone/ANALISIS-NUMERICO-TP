@@ -64,7 +64,7 @@ def filtro_pasa_bajos(data, cutoff, fs, order=5):
     b, a = butter(order, normal_cutoff, btype='low', analog=False)
     return filtfilt(b, a, data)
 
-cutoff = 20.0  # Hz
+cutoff = 40.0  # Hz
 senales_filtradas = [filtro_pasa_bajos(s, cutoff, fs) for s in senales]
 
 # Visualización de señales originales vs filtradas
@@ -128,18 +128,22 @@ band_limits = [4, 8, 13, 30]
 plt.figure(figsize=(15, 8))
 for i, (xf, yf) in enumerate(ffts):
     etapa = ETAPAS[i]
-    mask = xf <= 40  # Solo mostrar hasta 40 Hz
+    mask = xf <= 40
     plt.subplot(3, 1, i + 1)
     plt.plot(xf[mask], yf[mask])
     plt.title(f'Señal {i + 1} ({etapa}) - Espectro de Frecuencia (FFT)')
     plt.xlabel('Frecuencia [Hz]')
     plt.ylabel('Magnitud [u.a.]')
     plt.grid(True)
-    plt.autoscale(enable=True, axis='y')  # Autoajusta el eje Y solo a lo visible
+    plt.autoscale(enable=True, axis='y')
+    plt.xlim(-1, mt.ceil(cutoff))
+    # Líneas verticales en los cortes de banda
+    for limit in band_limits:
+        plt.axvline(x=limit, color='red', linestyle='--', linewidth=1)
 plt.tight_layout()
 plt.show()
 
-# Diagrama de tallo con recorte explícito a 40 Hz
+# Diagrama de tallo con líneas divisorias
 plt.figure(figsize=(15, 8))
 for i, (xf, yf) in enumerate(ffts):
     etapa = ETAPAS[i]
@@ -152,8 +156,13 @@ for i, (xf, yf) in enumerate(ffts):
     plt.ylabel('Magnitud [u.a.]')
     plt.grid(True)
     plt.autoscale(enable=True, axis='y')
+    plt.xlim(-1, mt.ceil(cutoff))
+    # Líneas verticales
+    for limit in band_limits:
+        plt.axvline(x=limit, color='red', linestyle='--', linewidth=1)
 plt.tight_layout()
 plt.show()
+
 
 # 4. Potencia espectral usando FFT simple (PSD aproximada)
 # La PSD muestra cuánta potencia (energía por unidad de frecuencia) tiene una señal en cada frecuencia
