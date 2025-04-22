@@ -180,10 +180,29 @@ for i, (f, Pxx) in enumerate(potencias):
     etapa = ETAPAS[i]
     plt.subplot(3, 1, i + 1)
     plt.semilogy(f, Pxx) # eje logarítmico en Y (semilogy) para poder ver bien las diferencias de potencia, ya que suelen variar mucho entre banda
-    plt.title(f'Señal {i + 1} ({etapa}) - Densidad Espectral de Potencia (Estimación por FFT)')
+    plt.title(f'Señal {i + 1} ({etapa}) - Densidad Espectral de Potencia (Estimación por FFT) con Semilogy')
     plt.xlabel('Frecuencia [Hz]')
     plt.ylabel('Potencia [u.a./Hz]')
     plt.xlim(0, mt.ceil(cutoff))  # Limitar el eje X teniendo en cuenta el cutoff
+plt.tight_layout()
+plt.show()
+
+# Visualización de potencia espectral (diagrama de tallo) con ejes normales
+# Diagrama de tallo de la densidad espectral de potencia (escala lineal)
+plt.figure(figsize=(15, 8))
+for i, (f, Pxx) in enumerate(potencias):
+    etapa = ETAPAS[i]
+    plt.subplot(3, 1, i + 1)
+    markerline, stemlines, baseline = plt.stem(f, Pxx, linefmt='tab:blue', markerfmt=' ', basefmt=' ')
+    plt.setp(stemlines, linewidth=1.2)
+    
+    plt.title(f'Señal {i + 1} ({etapa}) - Densidad Espectral de Potencia (Diagrama de Tallo)')
+    plt.xlabel('Frecuencia [Hz]')
+    plt.ylabel('Potencia [u.a./Hz]')
+    plt.grid(True)
+    plt.xlim(0, mt.ceil(cutoff))  # Limitar eje X a cutoff
+    plt.autoscale(enable=True, axis='y')  # Autoajuste en Y
+
 plt.tight_layout()
 plt.show()
 
