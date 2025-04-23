@@ -58,11 +58,27 @@ graficar_senales(
 )
 
 # 2. Filtro pasa bajos
-def filtro_pasa_bajos(data, cutoff, fs, order=5):
-    nyq = 0.5 * fs
-    normal_cutoff = cutoff / nyq
-    b, a = butter(order, normal_cutoff, btype='low', analog=False)
-    return filtfilt(b, a, data)
+def filtro_pasa_bajos(data, cutoff, fs, num_taps=301):
+    """
+    Filtro pasa bajos FIR usando ventana de Hamming y convolución.
+    
+    :param data: señal de entrada.
+    :param cutoff: frecuencia de corte en Hz.
+    :param fs: frecuencia de muestreo.
+    :param num_taps: número de coeficientes (orden del filtro + 1).
+    :return: señal filtrada.
+    """
+    # Normalizar la frecuencia de corte
+    fc = cutoff / (fs / 2)
+    
+    # Crear el filtro FIR con ventana de Hamming
+    h = np.sinc(2 * fc * (np.arange(num_taps) - (num_taps - 1) / 2))
+    h *= np.hamming(num_taps)
+    h /= np.sum(h)  # Normalización para ganancia unitaria
+    
+    # Aplicar el filtro (modo 'same' mantiene la longitud original)
+    filtrada = np.convolve(data, h, mode='same')
+    return filtrada
 
 cutoff = 40.0  # Hz
 senales_filtradas = [filtro_pasa_bajos(s, cutoff, fs) for s in senales]
@@ -164,26 +180,24 @@ plt.tight_layout()
 plt.show()
 
 
-# 4. Potencia espectral usando FFT simple (PSD aproximada)
-# La PSD muestra cuánta potencia (energía por unidad de frecuencia) tiene una señal en cada frecuencia
-# Reutiliza la FFT ya calculada para estimar la potencia espectral
-
-potencias = []
-for xf, yf in ffts:
-    # Estimación de densidad espectral de potencia (PSD)
-    Pxx = (np.abs(yf) ** 2) / fs # Magnitud al cuadrado normalizada del espectro (ya calculada con FFT).
-    potencias.append((xf, Pxx))
-
+# 4. Potencia espectral (Welch)
+def calcular_potencia_espectral(senal, fs):
+     f, pxx = welch(senal, fs, nperseg=1024)
+     return f, pxx
+ 
+potencias = [calcular_potencia_espectral(s, fs) for s in senales_filtradas]
+ 
 # Visualización de potencia espectral
 plt.figure(figsize=(15, 8))
 for i, (f, Pxx) in enumerate(potencias):
-    etapa = ETAPAS[i]
-    plt.subplot(3, 1, i + 1)
-    plt.semilogy(f, Pxx) # eje logarítmico en Y (semilogy) para poder ver bien las diferencias de potencia, ya que suelen variar mucho entre banda
-    plt.title(f'Señal {i + 1} ({etapa}) - Densidad Espectral de Potencia (Estimación por FFT) con Semilogy')
-    plt.xlabel('Frecuencia [Hz]')
-    plt.ylabel('Potencia [u.a./Hz]') #es u.a./Hz porque lo escalamos diviendo por la frecuencia de muestreo.
-    plt.xlim(0, mt.ceil(cutoff))  # Limitar el eje X teniendo en cuenta el cutoff
+     etapa = ETAPAS[i]
+     plt.subplot(3, 1, i + 1)
+     plt.semilogy(f, Pxx)
+     plt.title(f'Señal {i + 1} {etapa}- Densidad Espectral de Potencia (Método de Welch)')
+     plt.xlabel('Frecuencia [Hz]')
+     plt.ylabel('Potencia [V²/Hz]')
+     plt.xlim(0, mt.ceil(cutoff))  # Limitar eje X a cutoff
+     plt.autoscale(enable=True, axis='y')  # Autoajuste en Y
 plt.tight_layout()
 plt.show()
 
@@ -202,7 +216,6 @@ for i, (f, Pxx) in enumerate(potencias):
     plt.grid(True)
     plt.xlim(0, mt.ceil(cutoff))  # Limitar eje X a cutoff
     plt.autoscale(enable=True, axis='y')  # Autoajuste en Y
-
 plt.tight_layout()
 plt.show()
 
