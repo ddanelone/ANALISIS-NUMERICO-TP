@@ -182,7 +182,7 @@ for i, (f, Pxx) in enumerate(potencias):
     plt.semilogy(f, Pxx) # eje logarítmico en Y (semilogy) para poder ver bien las diferencias de potencia, ya que suelen variar mucho entre banda
     plt.title(f'Señal {i + 1} ({etapa}) - Densidad Espectral de Potencia (Estimación por FFT) con Semilogy')
     plt.xlabel('Frecuencia [Hz]')
-    plt.ylabel('Potencia [u.a./Hz]')
+    plt.ylabel('Potencia [u.a./Hz]') #es u.a./Hz porque lo escalamos diviendo por la frecuencia de muestreo.
     plt.xlim(0, mt.ceil(cutoff))  # Limitar el eje X teniendo en cuenta el cutoff
 plt.tight_layout()
 plt.show()
@@ -245,6 +245,7 @@ def analizar_bandas(f, pxx, nombre_senal, etapa):
         'Gamma (30-50 Hz)': (30, 50)
     }
     print(f"\n🔍 Análisis de bandas para {nombre_senal} ({etapa}):")
+    # print(f"[*] Analisis de bandas para {nombre_senal} ({etapa}):")
     total = trapezoid(Pxx, f)
     for nombre, (low, high) in bandas.items():
         mask = (f >= low) & (f <= high)
