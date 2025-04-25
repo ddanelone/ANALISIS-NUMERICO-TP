@@ -97,8 +97,8 @@ for i in range(3):
 plt.tight_layout()
 plt.show()
 
-# Ventana temporal más chica (1 segundo sólamente) para ver mejor la diferencia
-t_ventana = t[t < 1]
+# Ventana temporal más chica (2 segundo sólamente) para comparar con la autocorrelación
+t_ventana = t[t < 2]
 senales_ventana = [s[:len(t_ventana)] for s in senales]
 filtradas_ventana = [s[:len(t_ventana)] for s in senales_filtradas]
 
@@ -180,7 +180,7 @@ plt.tight_layout()
 plt.show()
 
 
-# 4. Potencia espectral (Welch)
+# 3.1 Potencia espectral (Welch)
 def calcular_potencia_espectral(senal, fs):
      f, pxx = welch(senal, fs, nperseg=1024)
      return f, pxx
@@ -198,10 +198,13 @@ for i, (f, Pxx) in enumerate(potencias):
      plt.ylabel('Potencia [V²/Hz]')
      plt.xlim(0, mt.ceil(cutoff))  # Limitar eje X a cutoff
      plt.autoscale(enable=True, axis='y')  # Autoajuste en Y
+     # Líneas verticales en los cortes de banda
+     for limit in band_limits:
+        plt.axvline(x=limit, color='red', linestyle='--', linewidth=1)
 plt.tight_layout()
 plt.show()
 
-# Visualización de potencia espectral (diagrama de tallo) con ejes normales
+# 3.2 Visualización de potencia espectral (diagrama de tallo) con ejes normales
 # Diagrama de tallo de la densidad espectral de potencia (escala lineal)
 plt.figure(figsize=(15, 8))
 for i, (f, Pxx) in enumerate(potencias):
@@ -216,39 +219,13 @@ for i, (f, Pxx) in enumerate(potencias):
     plt.grid(True)
     plt.xlim(0, mt.ceil(cutoff))  # Limitar eje X a cutoff
     plt.autoscale(enable=True, axis='y')  # Autoajuste en Y
+    # Líneas verticales en los cortes de banda
+    for limit in band_limits:
+        plt.axvline(x=limit, color='red', linestyle='--', linewidth=1)
 plt.tight_layout()
 plt.show()
 
-
-# 5. Autocorrelación
-def calcular_autocorrelacion(senal):
-    autocorr = np.correlate(senal, senal, mode='full') # calcula la correlación cruzada en todos los lags (positivos y negativos).
-    autocorr = autocorr[len(autocorr)//2:] / np.max(autocorr) # cortar a la mitad para quedarnos solo con los desplazamientos positivos (futuro)
-                                                              # normalizar para que la autocorrelación máxima (en lag=0) valga 1. Así poder comparar entre señales.
-    return autocorr
-
-autocorrelaciones = [calcular_autocorrelacion(s) for s in senales_filtradas]
-t_autocorr = np.arange(len(autocorrelaciones[0])) / fs # representa retardos en segundos (lag).
-
-# Visualización de autocorrelación
-plt.figure(figsize=(15, 8))
-for i, ac in enumerate(autocorrelaciones):
-    if i == 0:
-        etapa = 'Registro sano'
-    elif i == 1:
-         etapa = 'Registro interictal'
-    else:
-        etapa = 'Registro convulsivo'
-    plt.subplot(3, 1, i + 1)
-    plt.plot(t_autocorr, ac)
-    plt.title(f'Señal {i + 1} ({etapa}) - Función de Autocorrelación Normalizada')
-    plt.xlabel('Retardo [s]')
-    plt.ylabel('Correlación normalizada')
-    plt.xlim(0, 2) # limitar la visualización a los primeros 2 segundos
-plt.tight_layout()
-plt.show()
-
-# 6. Análisis de bandas de frecuencia
+# 3.3 Análisis de bandas de frecuencia
 def analizar_bandas(f, pxx, nombre_senal, etapa):
     bandas = {
         'Delta (0.5-4 Hz)': (0.5, 4),
@@ -310,3 +287,31 @@ plt.show()
 for i, (f, Pxx) in enumerate(potencias):
     etapa = ETAPAS[i]
     analizar_bandas(f, Pxx, f"Señal {i + 1}", etapa)
+
+# 4. Autocorrelación
+def calcular_autocorrelacion(senal):
+    autocorr = np.correlate(senal, senal, mode='full') # calcula la correlación cruzada en todos los lags (positivos y negativos).
+    autocorr = autocorr[len(autocorr)//2:] / np.max(autocorr) # cortar a la mitad para quedarnos solo con los desplazamientos positivos (futuro)
+                                                              # normalizar para que la autocorrelación máxima (en lag=0) valga 1. Así poder comparar entre señales.
+    return autocorr
+
+autocorrelaciones = [calcular_autocorrelacion(s) for s in senales_filtradas]
+t_autocorr = np.arange(len(autocorrelaciones[0])) / fs # representa retardos en segundos (lag).
+
+# Visualización de autocorrelación
+plt.figure(figsize=(15, 8))
+for i, ac in enumerate(autocorrelaciones):
+    if i == 0:
+        etapa = 'Registro sano'
+    elif i == 1:
+         etapa = 'Registro interictal'
+    else:
+        etapa = 'Registro convulsivo'
+    plt.subplot(3, 1, i + 1)
+    plt.plot(t_autocorr, ac)
+    plt.title(f'Señal {i + 1} ({etapa}) - Función de Autocorrelación Normalizada')
+    plt.xlabel('Retardo [s]')
+    plt.ylabel('Correlación normalizada')
+    plt.xlim(0, 2) # limitar la visualización a los primeros 2 segundos
+plt.tight_layout()
+plt.show()
