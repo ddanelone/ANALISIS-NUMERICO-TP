@@ -1,0 +1,4 @@
+# Ignorar archivos .docx, .png y .mp4
+*.docx
+*.png
+*.mp4
