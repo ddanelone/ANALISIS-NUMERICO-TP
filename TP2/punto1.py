@@ -70,7 +70,7 @@ def extraer_mensaje(imagen_path):
 if __name__ == "__main__":
     imagen_original = "imagen_portadora.png"
     imagen_estego = "imagen_estego.png"
-    mensaje = "Hola, Análisis Numérico 2025"
+    mensaje = "Hola, Análisis Numérico 2025. Estamos al horno. Literal."
     
     imagen = Image.open(imagen_original).convert('L')
     capacidad = (imagen.size[0] * imagen.size[1]) // 8

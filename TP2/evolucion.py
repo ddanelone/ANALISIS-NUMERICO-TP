@@ -35,8 +35,8 @@ def extraer_imagen(f_portadora_mod, f_portadora, escala=0.1):
     return imagen_extraida
 
 # Cargar imágenes
-portadora = leer_imagen_gris('imagen_portadora.png')
-oculta = leer_imagen_gris('imagen_oculta.png')
+portadora = leer_imagen_gris('memaso.png')
+oculta = leer_imagen_gris('wp.png')
 
 # Ocultar imagen
 portadora_oculta, f_modificada = ocultar_imagen(portadora, oculta)
