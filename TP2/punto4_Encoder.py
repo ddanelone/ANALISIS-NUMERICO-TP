@@ -5,14 +5,14 @@ import csv
 delta = 1.0
 
 # 1. Cargar imagen
-imagen = Image.open("imagen_portadora.png").convert("L")
+imagen = Image.open("memaso.png").convert("L")
 matriz = np.array(imagen, dtype=np.float32)
 
 # 2. Transformada de Fourier
 tf2d = np.fft.fft2(matriz)
 
 # 3. Codificar mensaje
-mensaje = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.&"
+mensaje = "(1) En LSB, además de codificar más de 1 bit por pixel, podrían hallar otra manera de aumentar la capacidad de codificación en una imagen? (2) Por qué eligieron el método del umbral en 127 y cómo funciona? (3) Qué pasó con la imagen estego cuando usaron deltas muy altos (del orden de 100.000 o más) y qué efecto tuvieron en la imagen recuperada? *** FIN ***&"
 mensaje_ascii = mensaje.encode("latin1")
 mensaje_binario = ''.join(format(byte, '08b') for byte in mensaje_ascii)
 

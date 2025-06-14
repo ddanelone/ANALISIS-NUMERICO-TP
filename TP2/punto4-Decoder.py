@@ -6,7 +6,7 @@ delta = 1.0
 bandera = '&'
 
 # 1. Leer CSV y reconstruir matriz compleja
-with open("tf2d_codificada.csv", newline="") as archivo_csv:
+with open("preguntas (1).csv", newline="") as archivo_csv:
     lector = csv.reader(archivo_csv)
     next(lector)  # saltar encabezado
 
@@ -53,7 +53,10 @@ def extraer_mensaje_hasta_bandera(tf2d, delta, bandera='&'):
     return mensaje
 
 # Extraer mensaje
-mensaje_recuperado = extraer_mensaje_hasta_bandera(tf2d, delta)
+mensaje_recuperado = extraer_mensaje_hasta_bandera(tf2d, delta, bandera)
+if mensaje_recuperado.endswith(bandera):
+    mensaje_recuperado = mensaje_recuperado[:-1]
+
 print("📥 Mensaje recuperado:")
 print(mensaje_recuperado)
 

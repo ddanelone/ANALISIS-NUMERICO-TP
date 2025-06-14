@@ -1,0 +1,4 @@
+(1) En LSB, además de codificar más de 1 bit por pixel, podrían hallar otra manera de aumentar la capacidad de codificación en una imagen? 
+(2) Por qué eligieron el método del umbral en 127 y cómo funciona? 
+(3) Qué pasó con la imagen estego cuando usaron deltas muy altos (del orden de 100.000 o más) y qué efecto tuvieron en la imagen recuperada? 
+(4)¿Qué pasa si modifican las bajas frecuencias en la matriz transformada para codificar la imagen oculta y cómo lo resolvieron? 
