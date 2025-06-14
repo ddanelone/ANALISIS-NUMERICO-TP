@@ -225,7 +225,7 @@ def metodo_taylor_biseccion_con_log(a, b, tol=1e-6, max_iter=50):
 def ejecutar_metodos_con_comparacion(a=0, b=2, tol=1e-6, max_iter=50):
     f, f1, f2 = obtener_funciones_numericas()
     log = io.StringIO()
-
+    
     print("Comparación de rendimiento: Método de Taylor vs Combinado Taylor-Bisección\n", file=log)
 
     # Taylor puro
@@ -261,6 +261,11 @@ def ejecutar_metodos_con_comparacion(a=0, b=2, tol=1e-6, max_iter=50):
             a = x0
 
         x0 = x1
+        
+        print("x0:", x0)
+        print("a, b:", a, b)
+        print("tol:", tol)
+        print("f(x0):", f(x0))  # para ver cómo empieza el método
     end_taylor = time.perf_counter()
     tiempo_taylor = end_taylor - start_taylor
 
@@ -269,6 +274,10 @@ def ejecutar_metodos_con_comparacion(a=0, b=2, tol=1e-6, max_iter=50):
     historial_combinado, log_combinado = metodo_taylor_biseccion_con_log(a, b, tol, max_iter)
     end_combinado = time.perf_counter()
     tiempo_combinado = end_combinado - start_combinado
+    
+    print("Iteraciones Taylor:", len(historial_taylor))
+    print("Iteraciones Combinado:", len(historial_combinado))
+
 
     # Comparación
     print(f"Tiempo de ejecución Taylor puro: {tiempo_taylor:.12f} segundos", file=log)
@@ -410,5 +419,5 @@ def graficar_comparacion_convergencia():
     plt.savefig(buf, format='png')
     plt.close()
     buf.seek(0)
-
+    
     return buf
