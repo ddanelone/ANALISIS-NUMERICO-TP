@@ -34,7 +34,7 @@ const TrabajoPractico3 = () => {
       const consolaRes = await fetch(
         "http://localhost:8000/api/raices/newton",
         {
-          method: "POST",
+          method: "GET",
           headers: { "Content-Type": "application/json" },
         }
       );
@@ -187,22 +187,29 @@ const TrabajoPractico3 = () => {
       setConsigna(consignaTexto || "Error cargando consigna.");
       setSalidaConsola(consolaTexto || "Error cargando salida.");
 
-      // Cargar único gráfico (grafico-a)
       const imagenes: string[] = [];
-      try {
-        const res = await fetch("http://localhost:8000/api/gases/grafico-a", {
-          method: "GET",
-          headers: { Accept: "image/png" },
-        });
-        if (!res.ok) {
-          const errorText = await res.text();
-          console.warn(`Error cargando grafico4: ${res.status} - ${errorText}`);
-        } else {
-          const blob = await res.blob();
-          imagenes.push(URL.createObjectURL(blob));
+      const urls = [
+        "http://localhost:8000/api/gases/grafico_comparativo_gral",
+        "http://localhost:8000/api/gases/grafico_comparativo_z",
+        "http://localhost:8000/api/gases/grafico-a",
+      ];
+
+      for (const url of urls) {
+        try {
+          const res = await fetch(url, {
+            method: "GET",
+            headers: { Accept: "image/png" },
+          });
+          if (!res.ok) {
+            const errorText = await res.text();
+            console.warn(`Error cargando ${url}: ${res.status} - ${errorText}`);
+          } else {
+            const blob = await res.blob();
+            imagenes.push(URL.createObjectURL(blob));
+          }
+        } catch (err) {
+          console.warn(`Excepción cargando ${url}:`, err);
         }
-      } catch (err) {
-        console.warn("Excepción cargando grafico4:", err);
       }
       setImagenes(imagenes);
     } catch (error) {
@@ -345,7 +352,7 @@ const TrabajoPractico3 = () => {
       </div>
 
       {/* Contenido principal */}
-      <div className="flex-1 h-screen overflow-y-auto px-4 pt-10 lg:p-8 flex flex-col items-center">
+      <div className="flex-1 h-screen px-4 pt-10 lg:p-8 flex flex-col items-center">
         <div className="w-full max-w-5xl flex flex-col justify-start gap-6">
           {/* Consigna */}
           <div className="w-full">

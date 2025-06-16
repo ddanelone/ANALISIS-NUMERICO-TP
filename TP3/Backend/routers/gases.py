@@ -3,6 +3,7 @@ from fastapi.responses import PlainTextResponse, StreamingResponse
 from scipy.optimize import brentq
 
 from services.gases import EXPLICACION_INCISO_A, comparar_metodos_vdw, generar_grafico_gases, generar_grafico_general, generar_grafico_zoom, resolver_vdw_brentq
+from services.prestacion_gases import generar_grafico_comparativo_gral, generar_grafico_comparativo_z
 
 router = APIRouter(
     prefix="/api/gases",
@@ -95,3 +96,11 @@ def aplicar_taylor_vdw():
 @router.get("/explicacion-inciso-a", response_class=PlainTextResponse)
 def obtener_explicacion_inciso_a():
     return EXPLICACION_INCISO_A
+
+@router.get("/grafico_comparativo_gral")
+def grafico_comparativo_gral():
+    return StreamingResponse(generar_grafico_comparativo_gral(), media_type="image/png")
+
+@router.get("/grafico_comparativo_z")
+def grafico_comparativo_z():
+    return StreamingResponse(generar_grafico_comparativo_z(), media_type="image/png")

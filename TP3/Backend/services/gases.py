@@ -12,10 +12,11 @@ import time
 
 R = 8.314  # J/(mol·K)
 T = 200.0  # K
-a = 0.364e6  # Pa·m^6/mol^2
-b = 4.27e-5  # m^3/mol
+a = 0.364e6  # Pa·m^6/mol^2   según tabla para el CO2
+b = 4.27e-5  # m^3/mol        según tabla para el CO2
 pressures = [5e6, 0.5e6]  # Pascales
 P = 0.5e6
+
 
 def van_der_waals_eq(v, P, T):
     return (P + a / v**2) * (v - b) - R * T
@@ -24,48 +25,36 @@ def calcular_volumenes():
     resultados = []
     for P in pressures:
         v_ideal = R * T / P
-        v_min = b * 1.01
-        v_max = v_ideal * 5
-
-        max_attempts = 10
-        scale_factor = 2
-        attempt = 0
-        success = False
-
-        while attempt < max_attempts:
-            try:
-                f_min = van_der_waals_eq(v_min, P, T)
-                f_max = van_der_waals_eq(v_max, P, T)
-
-                if f_min * f_max < 0:
-                    v_real = brentq(van_der_waals_eq, v_min, v_max, args=(P, T))
-                    success = True
-                    break
-                else:
-                    v_max *= scale_factor
-            except Exception:
-                break
-            attempt += 1
-
-        v_real = v_real if success else None # type: ignore
+        v_ideal, v_real, _, _ = resolver_vdw_brentq(P, T)
         resultados.append((P, v_ideal, v_real))
     return resultados
 
 def generar_grafico_gases():
     resultados = calcular_volumenes()
-    fig, axs = plt.subplots(1, 2, figsize=(14, 5))
+    fig, axs = plt.subplots(1, len(resultados), figsize=(14, 5))
 
     for i, (P, v_ideal, v_real) in enumerate(resultados):
-        ax = axs[i]
-        v_min_plot = b * 1.01
-        v_max_plot = v_ideal * 10
+        ax = axs[i] if len(resultados) > 1 else axs
+
+        # Ajuste dinámico del rango de graficación
+        if v_real and v_real > b:
+            v_min_plot = min(b * 1.01, v_real * 0.5)
+            v_max_plot = max(v_ideal * 1.5, v_real * 2)
+        else:
+            v_min_plot = b * 1.01
+            v_max_plot = v_ideal * 2
+
         v_vals = np.linspace(v_min_plot, v_max_plot, 1000)
         f_vals = [van_der_waals_eq(v, P, T) for v in v_vals]
 
         ax.plot(v_vals, f_vals, label=f'f(v) para {P/1e6:.1f} MPa')
         ax.axhline(0, color='black', linestyle='--')
-        if v_real:
+
+        if v_real and v_real > b * 1.01:
             ax.axvline(v_real, color='green', linestyle='--', label=f'v_real ≈ {v_real:.2e}')
+        else:
+            ax.text(0.5, 0.1, "v_real no válida", transform=ax.transAxes, color="gray", fontsize=10)
+
         ax.axvline(v_ideal, color='red', linestyle=':', label=f'v_ideal ≈ {v_ideal:.2e}')
         ax.set_xlabel('Volumen molar v (m³/mol)')
         ax.set_ylabel('f(v)')
@@ -79,6 +68,7 @@ def generar_grafico_gases():
     plt.close()
     buf.seek(0)
     return buf
+
 
 # --- Buscar intervalo válido ---
 def encontrar_intervalo(P, T, v_min=1e-5, v_max=1e-1, pasos=10000):
@@ -254,3 +244,4 @@ Donde:
 
 🧪 Estas correcciones permiten modelar el comportamiento real de los gases a presiones altas o temperaturas bajas, donde las desviaciones del modelo ideal son significativas.
 """
+

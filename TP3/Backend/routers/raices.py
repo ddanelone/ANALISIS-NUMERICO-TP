@@ -35,7 +35,7 @@ funcionamiento y compare el costo computacional de ambas estrategias.
 """
     return consigna.strip()
  
-@router.post("/newton", summary="Método de Taylor 2º orden (parámetros fijos)")
+@router.get("/newton", summary="Método de Taylor 2º orden (parámetros fijos)")
 def metodo_taylor_segundo_orden_endpoint():
     f, f1, f2 = obtener_funciones_numericas()
     historial, resultado = metodo_taylor_segundo_orden(f, f1, f2)

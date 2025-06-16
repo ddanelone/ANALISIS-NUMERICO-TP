@@ -1,7 +1,0 @@
-1) revisar las matrices de ambas imagenes
-2) probar de guardar directamtne la matriz (nos aseguramos que podamos recuperar valores negativos).+
-3) Ver en formato .tiff
-
-	
-Comparar la matriz de la imagen oculta vs la recuperada, pixel a pixel, a ver qué tan parecida son.	
- 
