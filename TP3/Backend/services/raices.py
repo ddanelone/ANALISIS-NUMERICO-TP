@@ -142,15 +142,16 @@ def metodo_taylor_biseccion_con_log(a, b, tol=1e-6, max_iter=50):
     x0 = (a + b) / 2
     historial = []
 
-    # Contadores para el análisis comparativo
+    # Contadores para análisis
     iter_taylor = 0
     iter_biseccion = 0
+    iter_actualizacion_intervalo = 0
 
     for n in range(max_iter):
         fx = f(x0)
         f1x = f1(x0)
         f2x = f2(x0)
-        discriminante = f1x**2 - 2*fx*f2x
+        discriminante = f1x**2 - 2 * fx * f2x
 
         print(f"Iteración {n}:", file=log)
         print(f"  x_n = {x0:.15f}", file=log)
@@ -202,21 +203,21 @@ def metodo_taylor_biseccion_con_log(a, b, tol=1e-6, max_iter=50):
             print(f"Raíz aproximada: {x0:.15f}\n", file=log)
             break
 
-        # Actualizar intervalo para bisección
-        if f(a)*f(x0) < 0:
+        # Actualizar intervalo como en bisección
+        if f(a) * f(x0) < 0:
             b = x0
         else:
             a = x0
+        iter_actualizacion_intervalo += 1
 
         x0 = x1
 
-    # Al final, agregar el resumen comparativo al log:
+    # Resumen de contadores
     print("Resumen comparativo de uso de métodos:", file=log)
-    print(f"  Iteraciones totales: {n+1}", file=log)                        # type: ignore
+    print(f"  Iteraciones totales: {n+1}", file=log) # type: ignore
     print(f"  Iteraciones con método Taylor: {iter_taylor}", file=log)
     print(f"  Iteraciones con método Bisección: {iter_biseccion}", file=log)
-
-    # También podemos agregar estadísticas adicionales si quieres, por ejemplo el error final
+    print(f"  Iteraciones con actualización de intervalo (tipo bisección): {iter_actualizacion_intervalo}", file=log)
     error_final = historial[-1]["error"] if historial else None
     print(f"  Error final aproximado: {error_final:.15e}", file=log)
 
@@ -275,17 +276,18 @@ def ejecutar_metodos_con_comparacion(a=0, b=2, tol=1e-6, max_iter=50):
     end_combinado = time.perf_counter()
     tiempo_combinado = end_combinado - start_combinado
     
-    print("Iteraciones Taylor:", len(historial_taylor))
-    print("Iteraciones Combinado:", len(historial_combinado))
+    print(f"Iteraciones del método de Taylor: {len(historial_taylor)}", file=log)
+    print(f"Iteraciones del método combinado: {len(historial_combinado)}", file=log)
 
+    print(f"Valor final f(x) Taylor: {f(historial_taylor[-1]['x'])}", file=log)
+    print(f"Valor final f(x) Combinado: {f(historial_combinado[-1]['x'])}", file=log)
 
-    # Comparación
     print(f"Tiempo de ejecución Taylor puro: {tiempo_taylor:.12f} segundos", file=log)
-    print(f"Tiempo de ejecución Método combinado: {tiempo_combinado:.12f} segundos\n", file=log)
+    print(f"Tiempo de ejecución Método combinado: {tiempo_combinado:.12f} segundos", file=log)
 
     if tiempo_combinado > 0:
-        mejora = tiempo_taylor / tiempo_combinado
-        print(f"Relación de velocidad (Taylor/Combinado): {mejora:.2f}x", file=log)
+       mejora = tiempo_taylor / tiempo_combinado
+       print(f"Relación de velocidad (Taylor/Combinado): {mejora:.2f}x", file=log)
 
     return historial_taylor, historial_combinado, log.getvalue() + "\n\n" + log_combinado
  

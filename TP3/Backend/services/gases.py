@@ -23,25 +23,44 @@ def van_der_waals_eq(v, P, T):
 
 def calcular_volumenes():
     resultados = []
+    pressures = [5e6, 0.5e6]
     for P in pressures:
         v_ideal = R * T / P
-        v_ideal, v_real, _, _ = resolver_vdw_brentq(P, T)
-        resultados.append((P, v_ideal, v_real))
+        a_i, b_i = encontrar_intervalo(P, T)
+
+        if a_i is not None:
+            try:
+                v_real = brentq(van_der_waals_eq, a_i, b_i, args=(P, T))
+            except Exception as e:
+                v_real = None
+        else:
+            v_real = None
+
+        mensaje = (
+            f"v_real ≈ {v_real:.2e}, diferencia ≈ {abs(v_real - v_ideal)/v_real*100:.2f}%" # type: ignore
+            if v_real else "❌ No se encontró raíz"
+        )
+        resultados.append((P, v_ideal, v_real, mensaje))
+        
+        print(f"\nPresión: {P/1e6} MPa")
+        print(f"Intervalo encontrado: a={a_i}, b={b_i}")
+        print(f"v_real: {v_real}")
+
     return resultados
 
 def generar_grafico_gases():
     resultados = calcular_volumenes()
     fig, axs = plt.subplots(1, len(resultados), figsize=(14, 5))
 
-    for i, (P, v_ideal, v_real) in enumerate(resultados):
+    for i, (P, v_ideal, v_real, mensaje) in enumerate(resultados):
         ax = axs[i] if len(resultados) > 1 else axs
 
-        # Ajuste dinámico del rango de graficación
-        if v_real and v_real > b:
-            v_min_plot = min(b * 1.01, v_real * 0.5)
-            v_max_plot = max(v_ideal * 1.5, v_real * 2)
+        # Ajustamos el rango de graficación para que incluya siempre v_real (si existe)
+        if v_real is not None:
+            v_min_plot = min(v_real * 0.9, b * 0.95)
+            v_max_plot = max(v_ideal * 1.5, v_real * 1.1)
         else:
-            v_min_plot = b * 1.01
+            v_min_plot = b * 0.95
             v_max_plot = v_ideal * 2
 
         v_vals = np.linspace(v_min_plot, v_max_plot, 1000)
@@ -50,7 +69,7 @@ def generar_grafico_gases():
         ax.plot(v_vals, f_vals, label=f'f(v) para {P/1e6:.1f} MPa')
         ax.axhline(0, color='black', linestyle='--')
 
-        if v_real and v_real > b * 1.01:
+        if v_real is not None:
             ax.axvline(v_real, color='green', linestyle='--', label=f'v_real ≈ {v_real:.2e}')
         else:
             ax.text(0.5, 0.1, "v_real no válida", transform=ax.transAxes, color="gray", fontsize=10)
@@ -69,7 +88,6 @@ def generar_grafico_gases():
     buf.seek(0)
     return buf
 
-
 # --- Buscar intervalo válido ---
 def encontrar_intervalo(P, T, v_min=1e-5, v_max=1e-1, pasos=10000):
     v_vals = np.linspace(v_min, v_max, pasos)
@@ -82,17 +100,19 @@ def encontrar_intervalo(P, T, v_min=1e-5, v_max=1e-1, pasos=10000):
 
 # --- Resolver con Brentq (bisección) --- 
 def resolver_vdw_brentq(P, T):
-    a, b = encontrar_intervalo(P, T)
-    if a is None:
-        return None, None, None, "❌ No se encontró intervalo con cambio de signo para Brentq."
+    a_i, b_i = encontrar_intervalo(P, T)
+
+    if a_i is None:
+        return R * T / P, None, None, "❌ No se encontró intervalo con cambio de signo."
 
     try:
-        v_real = brentq(van_der_waals_eq, a, b, args=(P, T))
+        v_real = brentq(van_der_waals_eq, a_i, b_i, args=(P, T))
         v_ideal = R * T / P
         diferencia = abs(v_real - v_ideal) / v_real * 100
-        return v_ideal, v_real, diferencia, f"✅ Intervalo encontrado: [{a:.2e}, {b:.2e}]"
+        return v_ideal, v_real, diferencia, f"✅ Intervalo: [{a_i:.2e}, {b_i:.2e}]"
     except Exception as e:
-        return None, None, None, f"Error en Brentq: {e}"
+        return R * T / P, None, None, f"❌ Error al aplicar Brentq: {e}"
+
 
 # --- Gráfico general ---
 def generar_grafico_general(v_ideal, v_real, P, T):
