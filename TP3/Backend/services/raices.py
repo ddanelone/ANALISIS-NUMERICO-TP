@@ -22,9 +22,9 @@ def obtener_funciones_numericas():
 
 def metodo_taylor_segundo_orden(f, f1, f2, x0=1.5, tol=1e-6, max_iter=50):
     historial = []
-    log = io.StringIO()
+    salida = []
 
-    print("Método de búsqueda de raíces por serie de Taylor (2da derivada incluida)\n", file=log)
+    salida.append("📘 Método de búsqueda de raíces por serie de Taylor (incluye 2da derivada)\n")
 
     for n in range(max_iter):
         fx = f(x0)
@@ -32,25 +32,25 @@ def metodo_taylor_segundo_orden(f, f1, f2, x0=1.5, tol=1e-6, max_iter=50):
         f2x = f2(x0)
 
         if abs(fx) < tol:
-            print(f"Convergencia alcanzada por criterio de función (|f(x)| < {tol})", file=log)
-            print(f"Raíz aproximada: {x0}", file=log)
+            salida.append(f"✅ Convergencia por |f(x)| < {tol:.1e}")
+            salida.append(f"🔍 Raíz aproximada: {x0:.6f}")
             break
 
         discriminante = f1x**2 - 2*fx*f2x
 
-        print(f"Iteración {n}:", file=log)
-        print(f"  x_n = {x0}", file=log)
-        print(f"  f(x_n) = {fx}", file=log)
-        print(f"  f'(x_n) = {f1x}", file=log)
-        print(f"  f''(x_n) = {f2x}", file=log)
-        print(f"  Discriminante = {discriminante}", file=log)
+        salida.append(f"🔁 Iteración {n}")
+        salida.append(f"   xₙ         = {x0:.6f}")
+        salida.append(f"   f(xₙ)      = {fx:.2e}")
+        salida.append(f"   f'(xₙ)     = {f1x:.2e}")
+        salida.append(f"   f''(xₙ)    = {f2x:.2e}")
+        salida.append(f"   Discriminante = {discriminante:.2e}")
 
         if discriminante < 0:
-            print("  ¡Discriminante negativo! Raíces complejas. Se detiene el método.", file=log)
+            salida.append("❌ Discriminante negativo. Raíces complejas. Método detenido.")
             break
 
         if abs(f2x) < 1e-12:
-            print("  ¡Segunda derivada cercana a cero! Revertiendo a método de Newton.", file=log)
+            salida.append("⚠️ Segunda derivada cercana a cero. Usando Newton clásico.")
             delta = -fx / f1x
         else:
             sqrt_disc = np.sqrt(discriminante)
@@ -61,9 +61,9 @@ def metodo_taylor_segundo_orden(f, f1, f2, x0=1.5, tol=1e-6, max_iter=50):
         x1 = x0 + delta
         error = abs(x1 - x0)
 
-        print(f"  Δx elegido = {delta}", file=log)
-        print(f"  x_{n+1} = {x1}", file=log)
-        print(f"  Error = {error}\n", file=log)
+        salida.append(f"   Δx elegido = {delta:.2e}")
+        salida.append(f"   xₙ₊₁       = {x1:.6f}")
+        salida.append(f"   Error      = {error:.2e}\n")
 
         historial.append({
             'n': n,
@@ -78,12 +78,16 @@ def metodo_taylor_segundo_orden(f, f1, f2, x0=1.5, tol=1e-6, max_iter=50):
         })
 
         if error < tol:
-            print(f"Convergencia alcanzada en {n+1} iteraciones. Raíz aproximada: {x1}", file=log)
+            salida.append(f"✅ Convergencia alcanzada en {n+1} iteraciones.")
+            salida.append(f"🔍 Raíz aproximada: {x1:.6f}")
             break
 
         x0 = x1
 
-    return historial, log.getvalue()
+    else:
+        salida.append("❌ No se alcanzó convergencia dentro del máximo de iteraciones.")
+
+    return historial, "\n".join(salida)
 
 def graficar_iteraciones(historial, f, funcion_str="f(x)"):
     xs = [step['x'] for step in historial]
@@ -223,7 +227,7 @@ def metodo_taylor_biseccion_con_log(a, b, tol=1e-6, max_iter=50):
 
     return historial, log.getvalue()
  
-def ejecutar_metodos_con_comparacion(a=0, b=2, tol=1e-6, max_iter=50):
+def ejecutar_metodos_con_comparacion(a=0.1, b=18, tol=1e-6, max_iter=50):
     f, f1, f2 = obtener_funciones_numericas()
     log = io.StringIO()
     
@@ -292,11 +296,12 @@ def ejecutar_metodos_con_comparacion(a=0, b=2, tol=1e-6, max_iter=50):
     return historial_taylor, historial_combinado, log.getvalue() + "\n\n" + log_combinado
  
 def graficar_convergencia_loglog():
+   
     f, f1, f2 = obtener_funciones_numericas()
     raiz_real = 0.5671432904097838  # Raíz conocida
     historial, _ = metodo_taylor_segundo_orden(f, f1, f2, x0=1.5, tol=1e-6, max_iter=50)
 
-    errors = [abs(step['x_next'] - raiz_real) for step in historial if abs(step['x_next'] - raiz_real) > 0]
+    errors = [abs(step['x_next'] - raiz_real) for step in historial if abs(step['x_next'] - raiz_real) > 0] #type:ignore
     iterations = np.arange(1, len(errors) + 1, dtype=float)
 
     if not errors:
@@ -341,6 +346,7 @@ def graficar_convergencia_loglog():
     return buffer
  
 def graficar_taylor_local(iteration: int):
+    delta_zoom=0.1
     f, f1, f2 = obtener_funciones_numericas()
     historial, _ = metodo_taylor_segundo_orden(f, f1, f2, x0=1.5, tol=1e-6, max_iter=50)
 
@@ -354,35 +360,61 @@ def graficar_taylor_local(iteration: int):
     f2n = step['f2']
     xn_next = step['x_next']
 
-    x_local = np.linspace(0, 0.9, 300)
-
     def taylor2(x_val):
-        return fxn + f1n * (x_val - xn) + 0.5 * f2n * (x_val - xn)**2
+        return fxn + f1n * (x_val - xn) + 0.5 * f2n * (x_val - xn) ** 2
 
-    y_original = f(x_local)
-    y_taylor = taylor2(x_local)
+    # --- Gráfico 1: Intervalo amplio fijo ---
+    x_amplio = np.linspace(0, 0.9, 300)
+    y_orig_amplio = f(x_amplio)
+    y_taylor_amplio = taylor2(x_amplio)
 
-    plt.figure(figsize=(8, 5))
-    plt.plot(x_local, y_original, label='Función original $f(x)$', color='navy', linewidth=2)
-    plt.plot(x_local, y_taylor, label=f'Aprox. Taylor 2° orden en $x_{{{iteration}}}$',
-             color='green', linestyle='--', linewidth=2)
-    plt.scatter([xn], [fxn], color='red', s=80, label=f'$x_{{{iteration}}}$ (punto de expansión)')
-    plt.scatter([xn_next], [0], color='blue', s=80, label=f'$x_{{{iteration+1}}}$ (aprox. raíz)')
-    plt.axhline(0, color='black', linewidth=0.8, linestyle='--')
-    plt.axvline(xn, color='red', linestyle=':', linewidth=1)
-    plt.axvline(xn_next, color='blue', linestyle=':', linewidth=1)
-    plt.fill_between(x_local, y_original, y_taylor, color='lightgreen', alpha=0.3)
+    # --- Gráfico 2: Zoom local centrado en xn ---
+    x_local = np.linspace(xn - delta_zoom, xn + delta_zoom, 300)
+    y_orig_local = f(x_local)
+    y_taylor_local = taylor2(x_local)
 
-    plt.title(f'Aproximación local con Serie de Taylor 2° orden\nIteración {iteration}', fontsize=14)
-    plt.xlabel('$x$', fontsize=12)
-    plt.ylabel('$f(x)$', fontsize=12)
-    plt.legend(fontsize=10)
-    plt.grid(True, linestyle='--', alpha=0.6)
-    plt.xlim(0, 0.9)
+    fig, axs = plt.subplots(1, 2, figsize=(14, 5))
 
-    y_min = min(np.min(y_original), np.min(y_taylor)) - 0.1
-    y_max = max(np.max(y_original), np.max(y_taylor)) + 0.1
-    plt.ylim(y_min, y_max)
+    # Gráfico amplio
+    axs[0].plot(x_amplio, y_orig_amplio, label='Función original $f(x)$', color='navy', linewidth=2)
+    axs[0].plot(x_amplio, y_taylor_amplio, label=f'Aprox. Taylor 2° orden en $x_{{{iteration}}}$',
+                color='green', linestyle='--', linewidth=2)
+    axs[0].scatter([xn], [fxn], color='red', s=80, label=f'$x_{{{iteration}}}$ (punto de expansión)')
+    axs[0].scatter([xn_next], [0], color='blue', s=80, label=f'$x_{{{iteration+1}}}$ (aprox. raíz)')
+    axs[0].axhline(0, color='black', linewidth=0.8, linestyle='--')
+    axs[0].axvline(xn, color='red', linestyle=':', linewidth=1)
+    axs[0].axvline(xn_next, color='blue', linestyle=':', linewidth=1)
+    axs[0].fill_between(x_amplio, y_orig_amplio, y_taylor_amplio, color='lightgreen', alpha=0.3)
+    axs[0].set_title(f'Intervalo amplio fijo\nIteración {iteration}')
+    axs[0].set_xlabel('$x$')
+    axs[0].set_ylabel('$f(x)$')
+    axs[0].legend(fontsize=9)
+    axs[0].grid(True, linestyle='--', alpha=0.6)
+    axs[0].set_xlim(0, 0.9)
+    y_min = min(np.min(y_orig_amplio), np.min(y_taylor_amplio)) - 0.1
+    y_max = max(np.max(y_orig_amplio), np.max(y_taylor_amplio)) + 0.1
+    axs[0].set_ylim(y_min, y_max)
+
+    # Gráfico zoom local
+    axs[1].plot(x_local, y_orig_local, label='Función original $f(x)$', color='navy', linewidth=2)
+    axs[1].plot(x_local, y_taylor_local, label=f'Aprox. Taylor 2° orden en $x_{{{iteration}}}$',
+                color='green', linestyle='--', linewidth=2)
+    axs[1].scatter([xn], [fxn], color='red', s=80, label=f'$x_{{{iteration}}}$ (punto de expansión)')
+    axs[1].scatter([xn_next], [0], color='blue', s=80, label=f'$x_{{{iteration+1}}}$ (aprox. raíz)')
+    axs[1].axhline(0, color='black', linewidth=0.8, linestyle='--')
+    axs[1].axvline(xn, color='red', linestyle=':', linewidth=1)
+    axs[1].axvline(xn_next, color='blue', linestyle=':', linewidth=1)
+    axs[1].fill_between(x_local, y_orig_local, y_taylor_local, color='lightgreen', alpha=0.3)
+    axs[1].set_title(f'Zoom local en $x_{{{iteration}}}$ ± {delta_zoom}')
+    axs[1].set_xlabel('$x$')
+    axs[1].set_ylabel('$f(x)$')
+    axs[1].legend(fontsize=9)
+    axs[1].grid(True, linestyle='--', alpha=0.6)
+
+    y_min_local = min(np.min(y_orig_local), np.min(y_taylor_local)) - 0.1
+    y_max_local = max(np.max(y_orig_local), np.max(y_taylor_local)) + 0.1
+    axs[1].set_ylim(y_min_local, y_max_local)
+    axs[1].set_xlim(xn - delta_zoom, xn + delta_zoom)
 
     plt.tight_layout()
     buffer = io.BytesIO()
@@ -390,7 +422,7 @@ def graficar_taylor_local(iteration: int):
     plt.close()
     buffer.seek(0)
     return buffer
-
+ 
 def graficar_comparacion_convergencia():
     historial_taylor, historial_combinado, _ = ejecutar_metodos_con_comparacion()
 
@@ -423,3 +455,100 @@ def graficar_comparacion_convergencia():
     buf.seek(0)
     
     return buf
+
+PROBLEMAS_INCISO_A = """
+🔍 ¿Qué estamos resolviendo?
+Desarrollamos un método numérico para encontrar raíces de funciones no lineales utilizando la expansión en serie de Taylor hasta la segunda derivada. El objetivo es hallar un valor x tal que f(x) = 0, comenzando desde una estimación inicial x₀.
+
+🔢 La expansión de Taylor hasta segundo orden de f(x) alrededor de xₙ es:
+    f(x) ≈ f(xₙ) + f'(xₙ)(x - xₙ) + (1/2)f''(xₙ)(x - xₙ)²
+
+Igualamos a cero y resolvemos para obtener la siguiente aproximación xₙ₊₁.
+
+---
+
+✅ Condiciones para aplicar el método:
+1. La función f debe ser derivable al menos dos veces.
+2. f', f'' deben ser continuas en el entorno de la raíz.
+3. f''(xₙ) no debe ser cercano a cero (evita inestabilidad).
+4. El discriminante D = (f')² - 2f·f'' debe ser ≥ 0 (evita raíces complejas).
+5. El punto inicial x₀ debe estar razonablemente cerca de la raíz.
+
+---
+
+🔁 Justificación del paso iterativo:
+Planteamos la ecuación cuadrática en Δx = x - xₙ:
+
+    f''·Δx² + 2f'·Δx + 2f = 0
+
+Resolvemos con fórmula general:
+
+    Δx = [ -f' ± √(f'² - 2f·f'') ] / f''
+
+Elegimos el Δx con menor módulo y actualizamos:
+
+    xₙ₊₁ = xₙ + Δx
+
+---
+
+📉 Error y convergencia:
+El error se calcula como:
+
+    error = |xₙ₊₁ - xₙ|
+
+Se verifica la convergencia si el error es menor a una tolerancia (por ejemplo, 1e-6).
+
+⚡ El método puede tener orden de convergencia superior a 2, dependiendo de la función. En general, converge más rápido que Newton-Raphson si las condiciones son adecuadas.
+
+---
+
+✅ Confirmación con función conocida:
+En este TP, aplicamos este método a la ecuación de Van der Waals para CO₂, y lo validamos también con funciones conocidas para confirmar la validez del procedimiento.
+"""
+
+PROBLEMAS_INCISO_B = """
+### 🧠 **1) Criterios de aplicación para lograr robustez**
+
+El algoritmo desarrollado combina la rapidez del método de **Taylor de segundo orden** con la solidez del **método de bisección**. Para decidir cuál utilizar en cada iteración, se siguen estos criterios:
+
+- ❌ **No se aplica Taylor si**:
+  - El discriminante `f'(x)² - 2·f(x)·f''(x)` es negativo (raíz compleja).
+  - La segunda derivada `f''(x)` es muy cercana a cero (riesgo de división numéricamente inestable).
+  - La estimación resultante queda fuera del intervalo de búsqueda `[a, b]`.
+
+- ✅ **Se aplica Taylor si**:
+  - El discriminante es positivo.
+  - La segunda derivada tiene un valor significativo.
+  - El nuevo valor calculado cae dentro del intervalo permitido.
+
+- 🔁 En ambos casos, el intervalo se actualiza según el signo de `f(x)` (como en bisección) para mantener la raíz dentro de [a, b].
+
+De esta manera, el método se adapta a cualquier intervalo inicial y se vuelve **automáticamente robusto**, incluso frente a funciones complicadas.
+
+---
+
+### ⚡ **2) Comparación de eficiencia computacional**
+
+- 🔐 **Bisección**:  
+  Es extremadamente robusto, siempre converge si hay cambio de signo. Pero es lento, ya que la convergencia es lineal.  
+  No requiere derivadas y cada iteración es muy barata.
+
+- ⚡ **Taylor puro**:  
+  Es mucho más rápido (convergencia superlineal), pero menos confiable: puede fallar si la función no es suave o si las derivadas no se comportan bien.  
+  Requiere calcular `f'` y `f''`, por lo que tiene un mayor costo por iteración.
+
+- 🔀 **Método combinado**:  
+  Se comporta como Taylor cuando puede (velocidad), y cae de forma segura en bisección cuando debe (robustez).  
+  Es eficiente, confiable y rápido: un excelente equilibrio entre rendimiento y estabilidad.
+
+---
+
+🏁 **Resultado empírico:**  
+En nuestras pruebas, el método combinado:
+- Fue más veloz en tiempo total.
+- Requirió menos iteraciones efectivas.
+- Conservó la precisión, incluso en intervalos no óptimos.
+
+✅ Es la opción más segura y poderosa cuando se busca automatizar la búsqueda de raíces en funciones no lineales.
+
+"""

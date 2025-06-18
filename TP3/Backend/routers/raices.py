@@ -1,9 +1,9 @@
 from fastapi import APIRouter
 from fastapi import HTTPException
-from fastapi.responses import StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.responses import PlainTextResponse
 from starlette.responses import StreamingResponse
-from services.raices import ejecutar_metodos_con_comparacion, graficar_comparacion_convergencia, graficar_convergencia_loglog, graficar_iteraciones, graficar_taylor_local, metodo_taylor_biseccion_con_log, obtener_funciones_numericas, metodo_taylor_segundo_orden
+from services.raices import PROBLEMAS_INCISO_A, PROBLEMAS_INCISO_B, ejecutar_metodos_con_comparacion, graficar_comparacion_convergencia, graficar_convergencia_loglog, graficar_iteraciones, graficar_taylor_local, metodo_taylor_biseccion_con_log, obtener_funciones_numericas, metodo_taylor_segundo_orden
 
 router = APIRouter(
     prefix="/api/raices",
@@ -35,14 +35,11 @@ funcionamiento y compare el costo computacional de ambas estrategias.
 """
     return consigna.strip()
  
-@router.get("/newton", summary="Método de Taylor 2º orden (parámetros fijos)")
-def metodo_taylor_segundo_orden_endpoint():
+@router.get("/newton", summary="Taylor (datos + texto enriquecido)")
+def metodo_taylor_segundo_orden_json():
     f, f1, f2 = obtener_funciones_numericas()
-    historial, resultado = metodo_taylor_segundo_orden(f, f1, f2)
-    return {
-        "resultado": resultado,
-        "historial": historial
-    }
+    historial, salida = metodo_taylor_segundo_orden(f, f1, f2)
+    return JSONResponse(content={"historial": historial, "salida": salida})
 
 @router.get("/grafico1", summary="Gráfico de la función y puntos iterativos")
 def grafico_funcion_y_iteraciones():
@@ -71,10 +68,9 @@ def grafico_taylor_local_endpoint(iteration: int):
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-
 @router.get("/inciso1b", response_class=PlainTextResponse)
 def inciso1b():
-    a, b = 0, 2
+    a, b = 0.1, 18
     tol = 1e-6
     max_iter = 50
 
@@ -88,3 +84,12 @@ def grafico4():
         return StreamingResponse(buffer, media_type="image/png")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+ 
+@router.get("/dificultad-a", response_class=PlainTextResponse)
+def obtener_dificultada():
+    return PROBLEMAS_INCISO_A
+ 
+@router.get("/dificultad-b", response_class=PlainTextResponse)
+def obtener_dificultadb():
+   
+    return PROBLEMAS_INCISO_B

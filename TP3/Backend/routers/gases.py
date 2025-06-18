@@ -1,13 +1,13 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Response
 from fastapi.responses import PlainTextResponse, StreamingResponse
 from scipy.optimize import brentq
 
-from services.gases import EXPLICACION_INCISO_A, comparar_metodos_vdw, generar_grafico_gases, generar_grafico_general, generar_grafico_zoom, resolver_vdw_brentq
+from services.gases import EXPLICACION_INCISO_A, PROBLEMAS_INCISO_A, PROBLEMAS_INCISO_B, comparar_metodos_vdw, generar_grafico_gases, generar_grafico_general, generar_grafico_volumenes_comparados, generar_grafico_zoom, resolver_vdw_brentq
 from services.prestacion_gases import generar_grafico_comparativo_gral, generar_grafico_comparativo_z
 
 router = APIRouter(
     prefix="/api/gases",
-    tags=["Aplicación a Gases"],
+    tags=["Aplicación a un sistema de Gases"],
     responses={404: {"description": "Endpoint no encontrado"}}
 )
 
@@ -69,7 +69,6 @@ def resultado_gas():
         "exito": True
     }
 
-
 @router.get("/grafico-b")
 def grafico_gas():
     P = 0.5e6
@@ -78,7 +77,6 @@ def grafico_gas():
     if v_real is None:
         return {"error": "No se pudo calcular volumen real para graficar"}
     return generar_grafico_general(v_ideal, v_real, P, T)
-
 
 @router.get("/zoom")
 def grafico_zoom_gas():
@@ -104,3 +102,16 @@ def grafico_comparativo_gral():
 @router.get("/grafico_comparativo_z")
 def grafico_comparativo_z():
     return StreamingResponse(generar_grafico_comparativo_z(), media_type="image/png")
+ 
+@router.get("/dificultad-a", response_class=PlainTextResponse)
+def obtener_dificultada():
+    return PROBLEMAS_INCISO_A
+ 
+@router.get("/dificultad-b", response_class=PlainTextResponse)
+def obtener_dificultadb():
+    return PROBLEMAS_INCISO_B
+ 
+@router.get("/grafico_comparacion_volumenes", response_class=Response)
+def grafico_comparacion_volumenes():
+    imagen = generar_grafico_volumenes_comparados()
+    return Response(content=imagen.getvalue(), media_type="image/png")

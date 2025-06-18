@@ -1,16 +1,22 @@
 "use client";
 
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+
 import { useState } from "react";
 import Logo from "@/components/logo";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import CarouselOrientation from "./carousel";
 import { LoaderCircle } from "lucide-react";
-import { Label } from "@/components/ui/label";
 
 const TrabajoPractico3 = () => {
   const [consigna, setConsigna] = useState("");
   const [salidaConsola, setSalidaConsola] = useState("");
+  const [experiencia, setExperiencia] = useState("");
   const [imagenes, setImagenes] = useState<string[]>([]);
   const [isLoading, setisLoading] = useState<boolean>(false);
   const [isLoading1, setisLoading1] = useState<boolean>(false);
@@ -31,17 +37,24 @@ const TrabajoPractico3 = () => {
       const consignaTexto = await consignaRes.text();
 
       // Método newton (POST, JSON)
-      const consolaRes = await fetch(
-        "http://localhost:8000/api/raices/newton",
-        {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        }
+      const taylorRes = await fetch("http://localhost:8000/api/raices/newton", {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+      const taylorData = await taylorRes.json();
+
+      // Combinar salida enriquecida con datos históricos
+      const salidaCompleta = taylorData.salida; // Esto ya es el texto formateado
+
+      // Problemas en la resolución del grupo
+      const problemas1a = await fetch(
+        "http://localhost:8000/api/raices/dificultad-a"
       );
-      const consolaData = await consolaRes.json();
+      const problemas1aTexto = await problemas1a.text();
 
       setConsigna(consignaTexto || "Error cargando consigna.");
-      setSalidaConsola(consolaData.resultado || "Error cargando salida.");
+      setSalidaConsola(salidaCompleta || "Error cargando salida.");
+      setExperiencia(problemas1aTexto || "Error cargando experiencias.");
 
       // Cargar grafico1 y grafico2 en serie, asegurando orden y carga completa
       const imagenesBase: (string | null)[] = [];
@@ -127,8 +140,15 @@ const TrabajoPractico3 = () => {
       );
       const consolaTexto = await consolaRes.text();
 
+      // Problemas en la resolución del grupo
+      const problemas1b = await fetch(
+        "http://localhost:8000/api/raices/dificultad-b"
+      );
+      const problemas1bTexto = await problemas1b.text();
+
       setConsigna(consignaTexto || "Error cargando consigna.");
       setSalidaConsola(consolaTexto || "Error cargando salida.");
+      setExperiencia(problemas1bTexto || "Error cargando experiencias.");
 
       // Cargar único gráfico (grafico4)
       const imagenes: string[] = [];
@@ -179,19 +199,39 @@ const TrabajoPractico3 = () => {
       consignaTexto += `\n\n${consignaTexto2}`;
 
       // Cargar resultado del método combinado (GET, texto plano)
-      const consolaRes = await fetch(
+      const explicacionRes = await fetch(
         "http://localhost:8000/api/gases/explicacion-inciso-a"
       );
-      const consolaTexto = await consolaRes.text();
+      const explicacionTexto = await explicacionRes.text();
+
+      const problemas2A = await fetch(
+        "http://localhost:8000/api/gases/dificultad-a"
+      );
+      const problemas2ATexto = await problemas2A.text();
+
+      const resultadoRes = await fetch(
+        "http://localhost:8000/api/gases/resultado"
+      );
+      const resultadoJson = await resultadoRes.json();
+
+      const textoSalida = `
+${explicacionTexto}
+
+📌 Resultado numérico:
+- Volumen ideal: ${resultadoJson.volumen_ideal} m³/mol
+- Volumen real: ${resultadoJson.volumen_real} m³/mol
+- Diferencia relativa: ${resultadoJson["diferencia_relativa_%"]} %
+`;
 
       setConsigna(consignaTexto || "Error cargando consigna.");
-      setSalidaConsola(consolaTexto || "Error cargando salida.");
+      setSalidaConsola(textoSalida || "Error cargando salida.");
+      setExperiencia(problemas2ATexto || "Error cargando experiencias.");
 
       const imagenes: string[] = [];
       const urls = [
         "http://localhost:8000/api/gases/grafico_comparativo_gral",
         "http://localhost:8000/api/gases/grafico_comparativo_z",
-        "http://localhost:8000/api/gases/grafico-a",
+        "http://localhost:8000/api/gases/grafico_comparacion_volumenes",
       ];
 
       for (const url of urls) {
@@ -237,6 +277,13 @@ const TrabajoPractico3 = () => {
         "http://localhost:8000/api/gases/consigna-b"
       );
 
+      const problemas2B = await fetch(
+        "http://localhost:8000/api/gases/dificultad-b"
+      );
+      const problemas2BTexto = await problemas2B.text();
+
+      setExperiencia(problemas2BTexto || "Error cargando experiencias.");
+
       const consignaTexto2 = await consignaRes.text();
 
       consignaTexto += `\n\n${consignaTexto2}`;
@@ -253,7 +300,7 @@ const TrabajoPractico3 = () => {
       // Cargar las dos imágenes en orden: grafico-b y zoom
       const imagenes: string[] = [];
 
-      const rutas = ["grafico-b", "zoom"];
+      const rutas = ["grafico-a", "grafico-b", "zoom"];
       for (const ruta of rutas) {
         try {
           const res = await fetch(`http://localhost:8000/api/gases/${ruta}`, {
@@ -355,25 +402,62 @@ const TrabajoPractico3 = () => {
       <div className="flex-1 h-screen px-4 pt-10 lg:p-8 flex flex-col items-center">
         <div className="w-full max-w-5xl flex flex-col justify-start gap-6">
           {/* Consigna */}
-          <div className="w-full">
-            <h2 className="text-xl font-semibold mb-2">Consigna a resolver</h2>
-            <Label className="w-full block">
-              <ScrollArea className="w-full max-h-32 rounded-md border p-4 font-mono text-sm whitespace-pre-wrap bg-muted overflow-y-auto">
-                {consigna || "Cargá un inciso para ver la consigna."}
-              </ScrollArea>
-            </Label>
+          <div className="w-full border rounded-md p-4 bg-background shadow-sm">
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="item-1">
+                <AccordionTrigger className="h-10 flex items-center hover:bg-muted/50 rounded-md transition">
+                  <h2 className="text-xl font-semibold mb-2">
+                    <div className="whitespace-pre-wrap">
+                      Consigna a resolver
+                    </div>
+                  </h2>
+                </AccordionTrigger>
+                <AccordionContent>
+                  {consigna || "Cargá un inciso para ver la consigna."}
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </div>
 
           {/* Consola */}
-          <div className="w-full">
-            <h2 className="text-xl font-semibold mb-2">Salida en consola</h2>
-            <ScrollArea className="w-full max-h-56 rounded-md border p-4 font-mono text-sm whitespace-pre-wrap bg-muted overflow-y-auto">
-              {salidaConsola || "Cargá un inciso para ver la salida."}
-            </ScrollArea>
+          <div className="w-full border rounded-md p-4 bg-background shadow-sm">
+            <Accordion type="single" collapsible>
+              <AccordionItem value="item-1">
+                <AccordionTrigger className="h-10 flex items-center hover:bg-muted/50 rounded-md transition">
+                  <h2 className="text-xl font-semibold mb-2">
+                    Salida en consola
+                  </h2>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="whitespace-pre-wrap">
+                    {salidaConsola || "Cargá un inciso para ver la salida."}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </div>
+
+          {/* Experiencias personales */}
+          <div className="w-full border rounded-md p-4 bg-background shadow-sm">
+            <Accordion type="single" collapsible>
+              <AccordionItem value="item-1">
+                <AccordionTrigger className="h-10 flex items-center hover:bg-muted/50 rounded-md transition">
+                  <h2 className="text-xl font-semibold mb-2">
+                    Problemas en la resolución
+                  </h2>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="whitespace-pre-wrap">
+                    {experiencia ||
+                      "Cargá un inciso para ver las experiencias."}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </div>
 
           {/* Gráficos */}
-          <div className="w-full h-auto">
+          <div className="w-full h-auto border rounded-md p-4 bg-background shadow-sm">
             <h2 className="text-xl font-semibold mb-2">Galería de gráficos</h2>
             <CarouselOrientation images={imagenes} />
           </div>
