@@ -16,10 +16,10 @@ def obtener_consigna():
     consigna = """
 Trabajo Práctico - Búsqueda de raíces en funciones no-lineales
 
-1. b) Combine el método desarrolado anteriormente con el método de la bisección, en un solo algoritmo. Determinar
-y justificar los criterios de aplicación para lograr robustez, teniendo en cuenta que pueden introducirse
-diferentes intervalos de búsqueda de raices. Utilizando la misma función del inciso anterior verifique su
-funcionamiento y compare el costo computacional de ambas estrategias.
+1. a) Desarrollar y codificar un método para la resolución de ecuaciones no-lineales que utilice la expansión de
+la serie de Taylor hasta la segunda derivada incluida. Qué condiciones debe cumplir la función para poder
+aplicar el método? Justifique los pasos para determinar el valor de la siguiente iteración. Determinar el
+error y el orden de convergencia. Confirme su buen funcionamiento con alguna función conocida.
 """
     return consigna.strip()
 
@@ -35,7 +35,7 @@ funcionamiento y compare el costo computacional de ambas estrategias.
 """
     return consigna.strip()
  
-@router.get("/newton", summary="Taylor (datos + texto enriquecido)")
+@router.get("/taylor", summary="Taylor (datos + texto enriquecido)")
 def metodo_taylor_segundo_orden_json():
     f, f1, f2 = obtener_funciones_numericas()
     historial, salida = metodo_taylor_segundo_orden(f, f1, f2)

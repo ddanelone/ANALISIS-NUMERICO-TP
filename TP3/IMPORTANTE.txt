@@ -1,0 +1,7 @@
+Gente. El tp está virtualmente terminado. No agregué actualizaciones a la notebook jupyter porque hablé hoy con Pablo, y le encantó la idea y el demo, de la resolución web.
+Y me pidió que agreguemos un análisis de lo realizado más nuestra experiencia, así que cambié los Scroll text por unos acordeones desplegables, y quedó mucho mejor.
+Ya confronté las consignas vs. ChatGPT, y ajusté algunas cosas. 
+Para mí, está flama.
+Tómense el trabajo de leer los README de ambas carpetas, y ejecutarlo localmente. Van a ver que está espectacular.
+Más adelante tendría que refactorizar en el frontend el TrabajoPractico3 porque tiene muuuuchooooo código, y debería sacar funciones a otro archivo, y modulizar los componentes.
+Así queda más claro el código. Y lo usaremos después para los otros TP´s.
