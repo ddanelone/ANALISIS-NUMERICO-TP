@@ -9,6 +9,7 @@ import { handleInciso2A } from "@/lib/handlersTP3/inciso2A";
 import { handleInciso2B } from "@/lib/handlersTP3/inciso2B";
 import { IncisoButton } from "@/components/incisoButton";
 import { PanelAccordion } from "@/components/panelAccordion";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const TrabajoPractico3 = () => {
   const [consigna, setConsigna] = useState("");
@@ -19,6 +20,7 @@ const TrabajoPractico3 = () => {
   const [isLoading1, setisLoading1] = useState<boolean>(false);
   const [isLoading2, setisLoading2] = useState<boolean>(false);
   const [isLoading3, setisLoading3] = useState<boolean>(false);
+  const isAnyLoading = isLoading || isLoading1 || isLoading2 || isLoading3;
 
   const onClickIncisoA = () =>
     handleInciso1A({
@@ -125,7 +127,31 @@ const TrabajoPractico3 = () => {
           {/* Gráficos */}
           <div className="w-full h-auto border rounded-md p-4 bg-background shadow-sm">
             <h2 className="text-xl font-semibold mb-2">Galería de gráficos</h2>
-            <CarouselOrientation images={imagenes} />
+
+            {imagenes.length === 0 && !isAnyLoading && (
+              <p className="text-muted-foreground">No hay imágenes cargadas.</p>
+            )}
+
+            {isAnyLoading && (
+              <div className="flex gap-4 flex-wrap justify-center">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="flex flex-col items-center space-y-3">
+                    {/* Línea superior (título simulado) */}
+                    <Skeleton className="h-4 w-[200px] rounded-md" />
+
+                    {/* Imagen cuadrada */}
+                    <Skeleton className="h-[250px] w-[250px] rounded-xl" />
+
+                    {/* Línea inferior (texto simulado) */}
+                    <Skeleton className="h-4 w-[150px] rounded-md" />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {imagenes.length > 0 && !isAnyLoading && (
+              <CarouselOrientation images={imagenes} />
+            )}
           </div>
         </div>
       </div>
