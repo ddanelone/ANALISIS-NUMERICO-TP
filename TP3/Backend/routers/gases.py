@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Response
 from fastapi.responses import PlainTextResponse, StreamingResponse
-from scipy.optimize import brentq
 
 from services.gases import EXPLICACION_INCISO_A, PROBLEMAS_INCISO_A, PROBLEMAS_INCISO_B, comparar_metodos_vdw, generar_grafico_gases, generar_grafico_general, generar_grafico_volumenes_comparados, generar_grafico_zoom, resolver_vdw_brentq
 from services.prestacion_gases import generar_grafico_comparativo_gral, generar_grafico_comparativo_z
