@@ -456,7 +456,7 @@ def graficar_comparacion_convergencia_multi():
 
     plt.figure(figsize=(10, 6))
     plt.semilogy(iter_taylor, errores_taylor, 'o-', label=f'Taylor puro ({len(iter_taylor)} it.)', color='blue')
-    plt.semilogy(iter_combinado, errores_combinado, 's--', label=f'Taylor robusto ({len(iter_combinado)} it.)', color='green')
+    plt.semilogy(iter_combinado, errores_combinado, 's--', label=f'Taylor + Bisección ({len(iter_combinado)} it.)', color='green')
 
     plt.axvline(x=len(iter_taylor), color='blue', linestyle=':', linewidth=1)
     plt.axvline(x=len(iter_combinado), color='green', linestyle=':', linewidth=1)

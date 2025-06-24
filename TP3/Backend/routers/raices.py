@@ -5,7 +5,7 @@ from fastapi.responses import PlainTextResponse
 from starlette.responses import StreamingResponse
 import time
 import io
-from services.raices import PROBLEMAS_INCISO_A, PROBLEMAS_INCISO_B, PROBLEMAS_INCISO_B_MULTI, ejecutar_comparacion_taylor_multivariable, ejecutar_metodos_con_comparacion, graficar_comparacion_convergencia, graficar_comparacion_convergencia_multi, graficar_convergencia_loglog, graficar_convergencia_loglog_multi, graficar_iteraciones, graficar_iteraciones_multivariable, graficar_taylor_local, graficar_taylor_local_multivariable, metodo_taylor_biseccion_con_log, metodo_taylor_multivariable, metodo_taylor_multivariable_robusto, obtener_funciones_multivariables, obtener_funciones_numericas, metodo_taylor_segundo_orden
+from services.raices import PROBLEMAS_INCISO_A, PROBLEMAS_INCISO_A_MULTI, PROBLEMAS_INCISO_B, PROBLEMAS_INCISO_B_MULTI, ejecutar_comparacion_taylor_multivariable, ejecutar_metodos_con_comparacion, graficar_comparacion_convergencia, graficar_comparacion_convergencia_multi, graficar_convergencia_loglog, graficar_convergencia_loglog_multi, graficar_iteraciones, graficar_iteraciones_multivariable, graficar_taylor_local, graficar_taylor_local_multivariable, metodo_taylor_biseccion_con_log, metodo_taylor_multivariable, metodo_taylor_multivariable_robusto, obtener_funciones_multivariables, obtener_funciones_numericas, metodo_taylor_segundo_orden
 
 router = APIRouter(
     prefix="/api/raices",
@@ -45,7 +45,7 @@ def taylor_multivariable_json():
     historial, salida = metodo_taylor_multivariable(F, J, H, x0=[2.5, -2.5])
     return JSONResponse(content={"historial": historial, "salida": salida})
 
-@router.get("/grafico-multivariable", summary="Gráfico Taylor multivariable")
+@router.get("/grafico1-multivariable", summary="Gráfico Taylor multivariable")
 def grafico_taylor_multivariable():
     F, J, H, _ = obtener_funciones_multivariables()
     historial, _ = metodo_taylor_multivariable(F, J, H, x0=[2.5, -2.5])
@@ -74,7 +74,7 @@ def grafico_taylor_local_multivariable_endpoint(iteration: int):
 
 @router.get("/dificultad-a-multi", response_class=PlainTextResponse)
 def obtener_dificultada_multi():
-    return PROBLEMAS_INCISO_A
+    return PROBLEMAS_INCISO_A_MULTI
  
 @router.get("/inciso1b-multi", response_class=PlainTextResponse)
 def inciso1b_multi():

@@ -303,11 +303,15 @@ PROBLEMAS_INCISO_B = """
 
 ⚙️ El método de Taylor, por otro lado, sí logró converger exitosamente. A partir de una condición inicial razonable (entre 5b y la mitad del volumen ideal), encontró una raíz físicamente consistente con una precisión elevada (error final ≈ \(4.62 \times 10^{-9}\)) en tan solo 10 iteraciones. Se destaca la estabilidad y confiabilidad del método en este caso.
 
+
+💡 Extensión metodológica: El método de Taylor de segundo orden empleado en este problema puede verse como un caso particular del enfoque multivariable desarrollado previamente. La lógica de corrección adaptativa —utilizada en sistemas para garantizar que el paso numérico reduzca la norma de  𝐹(𝑥)- también puede aplicarse en este contexto escalar. Esto demuestra cómo herramientas diseñadas para sistemas complejos también pueden fortalecer la resolución de ecuaciones en una variable, aumentando la confiabilidad sin sacrificar eficiencia.
+
 📌 Conclusiones:
 - A presiones más bajas, la diferencia entre el volumen ideal y el real sigue siendo significativa, confirmando la necesidad de usar modelos no ideales.
 - El método de Brent no siempre converge a una raíz físicamente aceptable si el intervalo no está bien definido o si hay raíces múltiples.
 - El método de Taylor mostró gran eficiencia y precisión, siempre que se lo inicie con una condición física razonable.
 - Este ejercicio refuerza la importancia de analizar críticamente las soluciones numéricas, especialmente cuando se trabaja con ecuaciones no lineales en contextos físicos reales.
+
 """
 
 def generar_grafico_volumenes_comparados(P=5e6, T=200.0):
