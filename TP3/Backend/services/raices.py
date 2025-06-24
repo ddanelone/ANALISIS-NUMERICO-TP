@@ -61,6 +61,21 @@ def metodo_taylor_segundo_orden(f, f1, f2, x0=1.5, tol=1e-6, max_iter=50):
         x1 = x0 + delta
         error = abs(x1 - x0)
 
+        # Calcular orden de convergencia experimental si hay suficientes errores previos
+        if n >= 2:
+            e0 = historial[-2]['error']
+            e1 = historial[-1]['error']
+            e2 = error
+
+            if e0 > 0 and e1 > 0 and e2 > 0:
+                orden = np.log(e2 / e1) / np.log(e1 / e0)
+                salida.append(f"   Orden estimado de convergencia ≈ {orden:.2f}")
+                orden_estimado = float(orden)
+            else:
+                orden_estimado = None
+        else:
+            orden_estimado = None
+
         salida.append(f"   Δx elegido = {delta:.2e}")
         salida.append(f"   xₙ₊₁       = {x1:.6f}")
         salida.append(f"   Error      = {error:.2e}\n")
@@ -74,7 +89,8 @@ def metodo_taylor_segundo_orden(f, f1, f2, x0=1.5, tol=1e-6, max_iter=50):
             'disc': float(discriminante),
             'delta': float(delta),
             'x_next': float(x1),
-            'error': float(error)
+            'error': float(error),
+            'orden': orden_estimado
         })
 
         if error < tol:
@@ -86,6 +102,14 @@ def metodo_taylor_segundo_orden(f, f1, f2, x0=1.5, tol=1e-6, max_iter=50):
 
     else:
         salida.append("❌ No se alcanzó convergencia dentro del máximo de iteraciones.")
+
+    # Agregar nota final explicativa sobre el método
+    salida.append("\n📚 Requisitos del método:")
+    salida.append("- f(x), f'(x), f''(x) deben ser funciones continuas y evaluables en un entorno de la raíz.")
+    salida.append("- El discriminante f'(x)² - 2·f(x)·f''(x) debe ser ≥ 0 (si no, se obtienen raíces complejas).")
+    salida.append("- Si f''(x) ≈ 0, se recurre al método de Newton clásico.")
+    salida.append("- Se elige la Δx de menor módulo para mejorar la estabilidad numérica.")
+    salida.append("- A partir de la iteración 2 se estima el orden de convergencia observado.")
 
     return historial, "\n".join(salida)
 

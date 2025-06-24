@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Logo from "@/components/logo";
 import CarouselOrientation from "./carousel";
 import { handleInciso1A } from "@/lib/handlersTP3/inciso1A";
 import { handleInciso1B } from "@/lib/handlersTP3/inciso1B";
@@ -10,11 +9,7 @@ import { handleInciso2B } from "@/lib/handlersTP3/inciso2B";
 import { IncisoButton } from "@/components/incisoButton";
 import { PanelAccordion } from "@/components/panelAccordion";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
+import { LogoHoverCard } from "@/components/logoHoverCard";
 
 const TrabajoPractico3 = () => {
   const [consigna, setConsigna] = useState("");
@@ -82,24 +77,7 @@ const TrabajoPractico3 = () => {
   `}
       >
         <div className="absolute inset-0 z-[-1] bg-menu-lateral" />
-        <HoverCard openDelay={150} closeDelay={100}>
-          <HoverCardTrigger asChild>
-            <div className="cursor-pointer">
-              <Logo />
-            </div>
-          </HoverCardTrigger>
-          <HoverCardContent className="w-80 bg-background border border-muted shadow-xl">
-            <h4 className="text-lg font-semibold">Cuerpo docente</h4>
-            <div className="text-sm text-muted-foreground mt-1 space-y-1">
-              <div>Pablo &apos;The Punisher&apos; Kler</div>
-              <div>Luis &apos;The Legend&apos; Bianculi</div>
-              <div>Nicolás &apos;The Chaos Coordinator&apos; Frank</div>
-            </div>
-            <p className="text-xs text-right text-muted-foreground mt-2">
-              Año 2025 • React + FastAPI
-            </p>
-          </HoverCardContent>
-        </HoverCard>
+        <LogoHoverCard />
 
         <ul className="space-y-4 mt-6 w-full">
           <li className="text-lg font-bold px-1 text-center">T.P. 3</li>
