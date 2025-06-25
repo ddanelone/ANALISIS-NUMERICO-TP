@@ -5,4 +5,9 @@ const nextConfig: NextConfig = {
   devIndicators: false,
 };
 
+// para dockerizar paa
+module.exports = {
+  output: "standalone",
+};
+
 export default nextConfig;

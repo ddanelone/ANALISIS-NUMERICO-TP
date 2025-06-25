@@ -22,10 +22,8 @@ export async function handleInciso1A({
     // Textos
     const [consignaTexto, taylorData, problemasTexto] = await Promise.all([
       fetchTexto(`${API_BASE_URL}/raices/consigna-a`),
-      fetchJSON<{ salida: string }>(
-        `${API_BASE_URL}/raices/taylor-multivariable`
-      ),
-      fetchTexto(`${API_BASE_URL}/raices/dificultad-a-multi`),
+      fetchJSON<{ salida: string }>(`${API_BASE_URL}/raices/taylor`),
+      fetchTexto(`${API_BASE_URL}/raices/dificultad-a`),
     ]);
 
     setConsigna(consignaTexto || "Error cargando consigna.");
@@ -36,13 +34,10 @@ export async function handleInciso1A({
     const imagenesBase: (string | null)[] = [];
     for (let i = 1; i <= 2; i++) {
       try {
-        const res = await fetch(
-          `${API_BASE_URL}/raices/grafico${i}-multivariable`,
-          {
-            method: "GET",
-            headers: { Accept: "image/png" },
-          }
-        );
+        const res = await fetch(`${API_BASE_URL}/raices/grafico${i}`, {
+          method: "GET",
+          headers: { Accept: "image/png" },
+        });
         if (!res.ok) {
           const errorText = await res.text();
           console.warn(
@@ -61,15 +56,12 @@ export async function handleInciso1A({
 
     // Gráficos grafico3/0, grafico3/1, grafico3/2
     const imagenesGrafico3: string[] = [];
-    for (let iter = 0; iter <= 4; iter++) {
+    for (let iter = 0; iter <= 2; iter++) {
       try {
-        const res = await fetch(
-          `${API_BASE_URL}/raices/grafico3-multivariable/${iter}`,
-          {
-            method: "GET",
-            headers: { Accept: "image/png" },
-          }
-        );
+        const res = await fetch(`${API_BASE_URL}/raices/grafico3/${iter}`, {
+          method: "GET",
+          headers: { Accept: "image/png" },
+        });
         if (!res.ok) {
           const errorText = await res.text();
           console.warn(
