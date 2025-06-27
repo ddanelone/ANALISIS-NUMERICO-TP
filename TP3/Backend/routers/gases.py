@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Response
 from fastapi.responses import PlainTextResponse, StreamingResponse
 
-from services.gases import EXPLICACION_INCISO_A, PROBLEMAS_INCISO_A, PROBLEMAS_INCISO_B, comparar_metodos_vdw, generar_grafico_gases, generar_grafico_general, generar_grafico_volumenes_comparados, generar_grafico_zoom, resolver_vdw_brentq
+from services.gases import EXPLICACION_INCISO_A, PROBLEMAS_INCISO_A, PROBLEMAS_INCISO_B, comparar_metodos_vdw, generar_grafico_gases, generar_grafico_general, generar_grafico_volumenes_comparados, generar_grafico_zoom
 from services.prestacion_gases import generar_grafico_comparativo_gral, generar_grafico_comparativo_z
+from services.raices import ejecutar_metodos_con_comparacion, obtener_funciones_numericas
 
 router = APIRouter(
     prefix="/api/gases",
@@ -50,41 +51,40 @@ a partir de los resultados.
 def grafico_gases():
     buf = generar_grafico_gases()
     return StreamingResponse(buf, media_type="image/png")
- 
-@router.get("/resultado")
-def resultado_gas():
-    P = 0.5e6
-    T = 200.0
-    v_ideal, v_real, diferencia, mensaje = resolver_vdw_brentq(P, T)
-
-    if v_real is None:
-        return {"mensaje": mensaje, "exito": False}
-
-    return {
-        "mensaje": mensaje,
-        "volumen_ideal": f"{v_ideal:.6e}",
-        "volumen_real": f"{v_real:.6e}",
-        "diferencia_relativa_%": f"{diferencia:.4f}",
-        "exito": True
-    }
 
 @router.get("/grafico-b")
 def grafico_gas():
     P = 0.5e6
     T = 200.0
-    v_ideal, v_real, _, _ = resolver_vdw_brentq(P, T)
-    if v_real is None:
+    R = 8.314  # J/(mol·K)
+
+    _, historial_combinado, _ = ejecutar_metodos_con_comparacion(a=0.001, b=0.05)
+
+    if not historial_combinado:
         return {"error": "No se pudo calcular volumen real para graficar"}
+
+    v_real = historial_combinado[-1]["x"]
+    v_ideal = R * T / P
+
     return generar_grafico_general(v_ideal, v_real, P, T)
 
 @router.get("/zoom")
 def grafico_zoom_gas():
     P = 0.5e6
     T = 200.0
-    _, v_real, _, _ = resolver_vdw_brentq(P, T)
-    if v_real is None:
+
+    # Usamos los mismos límites iniciales que en 2.b
+    a_ini = 0.001
+    b_fin = 0.05
+
+    _, historial_combinado, _ = ejecutar_metodos_con_comparacion(a_ini, b_fin)
+
+    if not historial_combinado:
         return {"error": "No se pudo calcular volumen real para graficar"}
+
+    v_real = historial_combinado[-1]["x"]
     return generar_grafico_zoom(v_real, P, T)
+
  
 @router.get("/taylor-vdw", response_class=PlainTextResponse)
 def aplicar_taylor_vdw():
@@ -114,3 +114,35 @@ def obtener_dificultadb():
 def grafico_comparacion_volumenes():
     imagen = generar_grafico_volumenes_comparados()
     return Response(content=imagen.getvalue(), media_type="image/png")
+ 
+# Cambio en la resolución del item b
+@router.get("/resultado")
+def resultado_taylor_05mpa():
+    P = 0.5e6
+    T = 200.0
+    R = 8.314  # J/(mol·K)
+
+    # Ajustar valores globales si tus funciones dependen de ellos (por ejemplo en van_der_waals_eq)
+
+    # Ejecutar ambos métodos
+    historial_taylor, historial_combinado, log = ejecutar_metodos_con_comparacion(a=0.001, b=0.05)
+
+    # Calcular volumen ideal
+    v_ideal = R * T / P
+
+    # Extraer resultados de los métodos
+    v_taylor = historial_taylor[-1]["x"]
+    v_combinado = historial_combinado[-1]["x"]
+
+    dif_taylor = abs(v_taylor - v_ideal) / v_taylor * 100
+    dif_combinado = abs(v_combinado - v_ideal) / v_combinado * 100
+
+    return {
+        "mensaje": "Resolución del inciso 2.b con los métodos solicitados",
+        "volumen_ideal": f"{v_ideal:.6e}",
+        "volumen_taylor": f"{v_taylor:.6e}",
+        "volumen_combinado": f"{v_combinado:.6e}",
+        "diferencia_taylor_%": f"{dif_taylor:.4f}",
+        "diferencia_combinado_%": f"{dif_combinado:.4f}",
+        "log": log
+    }

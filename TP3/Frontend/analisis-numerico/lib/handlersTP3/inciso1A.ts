@@ -76,10 +76,35 @@ export async function handleInciso1A({
       }
     }
 
+    // Gráfico extra: f(x) = e⁻ˣ − x con su raíz
+    let graficoExtra: string | null = null;
+    try {
+      const res = await fetch(`${API_BASE_URL}/raices/grafico-f-exponencial`, {
+        method: "GET",
+        headers: { Accept: "image/png" },
+      });
+      if (res.ok) {
+        const blob = await res.blob();
+        graficoExtra = URL.createObjectURL(blob);
+      } else {
+        const errorText = await res.text();
+        console.warn(
+          `Error cargando grafico-f-exponencial: ${res.status} - ${errorText}`
+        );
+      }
+    } catch (err) {
+      console.warn("Excepción en grafico-f-exponencial:", err);
+    }
+
     // Armar lista final (solo imágenes válidas, en orden)
-    const imagenesValidas = [...imagenesBase, ...imagenesGrafico3].filter(
-      Boolean
-    ) as string[];
+    const imagenesValidas = [
+      ...imagenesBase,
+      ...imagenesGrafico3,
+      ...(graficoExtra ? [graficoExtra] : []),
+    ].filter((url): url is string => url !== null);
+
+    setImagenes(imagenesValidas);
+
     setImagenes(imagenesValidas);
   } catch (error) {
     console.error("❌ Error general en handleInciso1A:", error);

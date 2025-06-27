@@ -3,7 +3,7 @@ from fastapi import HTTPException
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.responses import PlainTextResponse
 from starlette.responses import StreamingResponse
-from services.raices import PROBLEMAS_INCISO_A, PROBLEMAS_INCISO_B, ejecutar_metodos_con_comparacion, graficar_comparacion_convergencia, graficar_convergencia_loglog, graficar_iteraciones, graficar_taylor_local, metodo_taylor_biseccion_con_log, obtener_funciones_numericas, metodo_taylor_segundo_orden
+from services.raices import PROBLEMAS_INCISO_A, PROBLEMAS_INCISO_B, ejecutar_metodos_con_comparacion, generar_grafico_funcion_exponencial, graficar_comparacion_convergencia, graficar_convergencia_loglog, graficar_iteraciones, graficar_taylor_local, metodo_taylor_biseccion_con_log, obtener_funciones_numericas, metodo_taylor_segundo_orden
 
 router = APIRouter(
     prefix="/api/raices",
@@ -91,5 +91,8 @@ def obtener_dificultada():
  
 @router.get("/dificultad-b", response_class=PlainTextResponse)
 def obtener_dificultadb():
-   
-    return PROBLEMAS_INCISO_B
+       return PROBLEMAS_INCISO_B
+    
+@router.get("/grafico-f-exponencial", summary="Gráfico de f(x) = e⁻ˣ − x con raíz")
+def obtener_grafico_exponencial():
+    return generar_grafico_funcion_exponencial()

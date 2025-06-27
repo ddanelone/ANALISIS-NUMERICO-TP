@@ -39,8 +39,10 @@ export async function handleInciso2A({
     // Resultado (JSON)
     const resultado = await fetchJSON<{
       volumen_ideal: number;
-      volumen_real: number;
-      "diferencia_relativa_%": number;
+      volumen_taylor: number;
+      volumen_combinado: number;
+      "diferencia_taylor_%": number;
+      "diferencia_combinado_%": number;
     }>(`${API_BASE_URL}/gases/resultado`);
 
     const textoSalida = `
@@ -48,8 +50,11 @@ ${explicacionTexto}
 
 📌 Resultado numérico:
 - Volumen ideal: ${resultado?.volumen_ideal} m³/mol
-- Volumen real: ${resultado?.volumen_real} m³/mol
-- Diferencia relativa: ${resultado?.["diferencia_relativa_%"]} %
+
+- Volumen calculado con Taylor: ${resultado?.volumen_taylor} m³/mol
+- Diferencia relativa con Taylor: ${resultado?.["diferencia_taylor_%"]} %
+- Volumen calculado con Taylor + Bisección: ${resultado?.volumen_combinado} m³/mol
+- Diferencia relativa con Taylor + Bisección: ${resultado?.["diferencia_combinado_%"]} %
 `;
 
     setConsigna(consignaTexto || "Error cargando consigna.");

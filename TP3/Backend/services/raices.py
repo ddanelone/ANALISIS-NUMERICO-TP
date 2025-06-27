@@ -5,6 +5,9 @@ import matplotlib
 matplotlib.use('Agg')  # Evita problemas con backends gráficos
 import matplotlib.pyplot as plt
 import time
+from scipy.optimize import brentq
+from io import BytesIO
+from fastapi.responses import StreamingResponse
 
 def obtener_funciones_expr():
     x = sp.Symbol('x')
@@ -251,7 +254,7 @@ def metodo_taylor_biseccion_con_log(a, b, tol=1e-6, max_iter=50):
 
     return historial, log.getvalue()
  
-def ejecutar_metodos_con_comparacion(a=0.1, b=18, tol=1e-6, max_iter=50):
+def ejecutar_metodos_con_comparacion(a=0.1, b=18.0, tol=1e-6, max_iter=50):
     f, f1, f2 = obtener_funciones_numericas()
     log = io.StringIO()
     
@@ -531,43 +534,43 @@ En este TP, aplicamos este método a la ecuación de Van der Waals para CO₂, y
 """
 
 PROBLEMAS_INCISO_B = """
-### 🧠 **1) Criterios de aplicación para lograr robustez**
+🧠 1) Criterios de aplicación para lograr robustez
 
-El algoritmo desarrollado combina la rapidez del método de **Taylor de segundo orden** con la solidez del **método de bisección**. Para decidir cuál utilizar en cada iteración, se siguen estos criterios:
+El algoritmo desarrollado combina la rapidez del método de Taylor de segundo orden con la solidez del método de bisección. Para decidir cuál utilizar en cada iteración, se siguen estos criterios:
 
-- ❌ **No se aplica Taylor si**:
+- ❌ No se aplica Taylor si:
   - El discriminante `f'(x)² - 2·f(x)·f''(x)` es negativo (raíz compleja).
   - La segunda derivada `f''(x)` es muy cercana a cero (riesgo de división numéricamente inestable).
   - La estimación resultante queda fuera del intervalo de búsqueda `[a, b]`.
 
-- ✅ **Se aplica Taylor si**:
+- ✅ Se aplica Taylor si:
   - El discriminante es positivo.
   - La segunda derivada tiene un valor significativo.
   - El nuevo valor calculado cae dentro del intervalo permitido.
 
 - 🔁 En ambos casos, el intervalo se actualiza según el signo de `f(x)` (como en bisección) para mantener la raíz dentro de [a, b].
 
-De esta manera, el método se adapta a cualquier intervalo inicial y se vuelve **automáticamente robusto**, incluso frente a funciones complicadas.
+De esta manera, el método se adapta a cualquier intervalo inicial y se vuelve automáticamente robusto, incluso frente a funciones complicadas.
 
 ---
 
-### ⚡ **2) Comparación de eficiencia computacional**
+⚡ 2) Comparación de eficiencia computacional
 
-- 🔐 **Bisección**:  
+- 🔐 Bisección:  
   Es extremadamente robusto, siempre converge si hay cambio de signo. Pero es lento, ya que la convergencia es lineal.  
   No requiere derivadas y cada iteración es muy barata.
 
-- ⚡ **Taylor puro**:  
+- ⚡ Taylor puro:  
   Es mucho más rápido (convergencia superlineal), pero menos confiable: puede fallar si la función no es suave o si las derivadas no se comportan bien.  
   Requiere calcular `f'` y `f''`, por lo que tiene un mayor costo por iteración.
 
-- 🔀 **Método combinado**:  
+- 🔀 Método combinado:  
   Se comporta como Taylor cuando puede (velocidad), y cae de forma segura en bisección cuando debe (robustez).  
   Es eficiente, confiable y rápido: un excelente equilibrio entre rendimiento y estabilidad.
 
 ---
 
-🏁 **Resultado empírico:**  
+🏁 Resultado empírico:  
 En nuestras pruebas, el método combinado:
 - Fue más veloz en tiempo total.
 - Requirió menos iteraciones efectivas.
@@ -576,3 +579,35 @@ En nuestras pruebas, el método combinado:
 ✅ Es la opción más segura y poderosa cuando se busca automatizar la búsqueda de raíces en funciones no lineales.
 
 """
+
+def generar_grafico_funcion_exponencial():
+    def f(x):
+        return np.exp(-x) - x
+
+    raiz = brentq(f, 0, 1)
+    x_vals = np.linspace(-2, 4, 800)
+    y_vals = f(x_vals)
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.plot(x_vals, y_vals, label=r'$f(x) = e^{-x} - x$', color='blue')
+    ax.axhline(0, color='black', linewidth=0.8, linestyle='--')
+    ax.axvline(0, color='gray', linestyle='--', linewidth=0.7)
+    ax.plot(raiz, f(raiz), 'ro', label=f'Raíz ≈ {raiz:.6f}') # type: ignore
+    ax.annotate(f'Raíz ≈ {raiz:.6f}', xy=(raiz, 0), xytext=(raiz + 0.5, 0.5), # type: ignore
+                arrowprops=dict(arrowstyle='->', color='red'),
+                fontsize=10, color='red')
+
+    ax.set_title('Visualización ampliada de $f(x) = e^{-x} - x$ y su raíz')
+    ax.set_xlabel('x')
+    ax.set_ylabel('f(x)')
+    ax.grid(True)
+    ax.legend()
+    fig.tight_layout()
+
+    # Guardar en buffer
+    buf = BytesIO()
+    plt.savefig(buf, format='png')
+    plt.close(fig)
+    buf.seek(0)
+
+    return StreamingResponse(buf, media_type="image/png")
