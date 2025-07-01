@@ -3,8 +3,96 @@ import matplotlib.pyplot as plt
 import numpy as np
 import io
 import time
+import sympy as sp
 
-from services.tp3.raices import ejecutar_metodos_con_comparacion
+from services.tp3.raices import metodo_taylor_biseccion_con_log
+
+# COMIENZA MATAFUEGO
+def obtener_funciones_expr(P, T):
+    v = sp.Symbol('v')
+    f_expr = (P + a / v**2) * (v - b) - R * T # type: ignore
+    f1_expr = sp.diff(f_expr, v)
+    f2_expr = sp.diff(f1_expr, v)
+    return v, f_expr, f1_expr, f2_expr
+
+
+def obtener_funciones_numericas(P, T):
+    x, f_expr, f1_expr, f2_expr = obtener_funciones_expr(P, T)
+    f = sp.lambdify(x, f_expr, 'numpy')
+    f1 = sp.lambdify(x, f1_expr, 'numpy')
+    f2 = sp.lambdify(x, f2_expr, 'numpy')
+    return f, f1, f2
+
+
+def ejecutar_metodos_con_comparacion(a=0.1, b=18.0, tol=1e-6, max_iter=50, P=None, T=None):
+    f, f1, f2 = obtener_funciones_numericas(P,T)
+    log = io.StringIO()
+    
+    print("Comparación de rendimiento: Método de Taylor vs Combinado Taylor-Bisección\n", file=log)
+
+    # Taylor puro
+    x0 = (a + b) / 2
+    historial_taylor = []
+
+    start_taylor = time.perf_counter()
+    for n in range(max_iter):
+        fx = f(x0)
+        f1x = f1(x0)
+        f2x = f2(x0)
+        discriminante = f1x**2 - 2*fx*f2x
+
+        if discriminante < 0 or abs(f2x) < 1e-12:
+            delta = 0.0
+            x1 = (a + b) / 2
+        else:
+            sqrt_disc = np.sqrt(discriminante)
+            delta1 = (-f1x + sqrt_disc) / f2x
+            delta2 = (-f1x - sqrt_disc) / f2x
+            delta = delta1 if abs(delta1) < abs(delta2) else delta2
+            x1 = x0 + delta
+
+        error = abs(x1 - x0)
+        historial_taylor.append({"iter": n, "x": x0, "fx": fx, "error": error})
+
+        if abs(fx) < tol:
+            break
+
+        if f(a)*f(x0) < 0:
+            b = x0
+        else:
+            a = x0
+
+        x0 = x1
+        
+        print("x0:", x0)
+        print("a, b:", a, b)
+        print("tol:", tol)
+        print("f(x0):", f(x0))  # para ver cómo empieza el método
+    end_taylor = time.perf_counter()
+    tiempo_taylor = end_taylor - start_taylor
+
+    # Método combinado
+    start_combinado = time.perf_counter()
+    historial_combinado, log_combinado = metodo_taylor_biseccion_con_log(a, b, tol, max_iter)
+    end_combinado = time.perf_counter()
+    tiempo_combinado = end_combinado - start_combinado
+    
+    print(f"Iteraciones del método de Taylor: {len(historial_taylor)}", file=log)
+    print(f"Iteraciones del método combinado: {len(historial_combinado)}", file=log)
+
+    print(f"Valor final f(x) Taylor: {f(historial_taylor[-1]['x'])}", file=log)
+    print(f"Valor final f(x) Combinado: {f(historial_combinado[-1]['x'])}", file=log)
+
+    print(f"Tiempo de ejecución Taylor puro: {tiempo_taylor:.12f} segundos", file=log)
+    print(f"Tiempo de ejecución Método combinado: {tiempo_combinado:.12f} segundos", file=log)
+
+    if tiempo_combinado > 0:
+       mejora = tiempo_taylor / tiempo_combinado
+       print(f"Relación de velocidad (Taylor/Combinado): {mejora:.2f}x", file=log)
+
+    return historial_taylor, historial_combinado, log.getvalue() + "\n\n" + log_combinado
+
+# TERMINA MATAFUEGO
 
 # ---------------------
 # Constantes y funciones
@@ -27,12 +115,12 @@ def calcular_volumenes():
     for P in pressures:
         v_ideal = R * T / P
 
-        # Usamos el mismo intervalo inicial en todos los casos (seguro)
-        a_ini = 0.001
-        b_fin = 0.05
+        # ✅ Intervalo adaptado a cada presión (basado en v_ideal)
+        a_ini = b * 1.01
+        b_fin = v_ideal * 10
 
         # Ejecutamos método combinado
-        _, historial_combinado, _ = ejecutar_metodos_con_comparacion(a_ini, b_fin)
+        _, historial_combinado, _ = ejecutar_metodos_con_comparacion(a_ini, b_fin, P=P, T=T)
 
         if historial_combinado:
             v_real = historial_combinado[-1]["x"]
@@ -57,7 +145,6 @@ def calcular_volumenes():
 
     return resultados
 
-
 def generar_grafico_gases():
     resultados = calcular_volumenes()
     fig, axs = plt.subplots(1, len(resultados), figsize=(14, 5))
@@ -65,19 +152,36 @@ def generar_grafico_gases():
     for i, (P, v_ideal, v_real, mensaje) in enumerate(resultados):
         ax = axs[i] if len(resultados) > 1 else axs
 
-        # Ajustamos el rango de graficación para que incluya siempre v_real (si existe)
+        # Rango: alejarnos de b, incluir bien v_real y v_ideal
+        v_min_plot = max(b * 1.01, 1e-6)
+        v_max_plot = v_ideal * 5 if v_ideal is not None else 0.01
+
+        # Asegurar que v_real entre en la gráfica
         if v_real is not None:
-            v_min_plot = min(v_real * 0.9, b * 0.95)
-            v_max_plot = max(v_ideal * 1.5, v_real * 1.1)
-        else:
-            v_min_plot = b * 0.95
-            v_max_plot = v_ideal * 2
+            v_min_plot = min(v_min_plot, v_real * 0.5)
+            v_max_plot = max(v_max_plot, v_real * 1.5)
 
         v_vals = np.linspace(v_min_plot, v_max_plot, 1000)
-        f_vals = [van_der_waals_eq(v, P, T) for v in v_vals]
+        
+        # Evaluamos f(v) evitando errores
+        f_vals = []
+        for v in v_vals:
+            try:
+                f_val = van_der_waals_eq(v, P, T)
+                f_vals.append(f_val)
+            except:
+                f_vals.append(np.nan)
 
-        ax.plot(v_vals, f_vals, label=f'f(v) para {P/1e6:.1f} MPa')
-        ax.axhline(0, color='black', linestyle='--')
+        f_vals = np.array(f_vals)
+        v_vals = np.array(v_vals)
+
+        # Graficamos solo valores válidos
+        mask = np.isfinite(f_vals)
+        v_plot = v_vals[mask]
+        f_plot = f_vals[mask]
+
+        ax.plot(v_plot, f_plot, label=f'f(v) para {P/1e6:.1f} MPa')
+        ax.axhline(0, color='black', linestyle='--', label='y = 0')
 
         if v_real is not None:
             ax.axvline(v_real, color='green', linestyle='--', label=f'v_real ≈ {v_real:.6f}')
@@ -85,11 +189,16 @@ def generar_grafico_gases():
             ax.text(0.5, 0.1, "v_real no válida", transform=ax.transAxes, color="gray", fontsize=10)
 
         ax.axvline(v_ideal, color='red', linestyle=':', label=f'v_ideal ≈ {v_ideal:.6f}')
+
         ax.set_xlabel('Volumen molar v (m³/mol)')
         ax.set_ylabel('f(v)')
         ax.set_title(f'Van der Waals: P = {P/1e6:.1f} MPa')
         ax.legend()
         ax.grid(True)
+
+        # Ajuste manual de escala vertical para ver y = 0
+        y_margin = (np.nanmax(f_plot) - np.nanmin(f_plot)) * 0.1
+        ax.set_ylim(np.nanmin(f_plot) - y_margin, np.nanmax(f_plot) + y_margin)
 
     plt.tight_layout()
     buf = io.BytesIO()
@@ -97,6 +206,7 @@ def generar_grafico_gases():
     plt.close()
     buf.seek(0)
     return buf
+
 
 # --- Buscar intervalo válido ---
 def encontrar_intervalo(P, T, v_min=1e-5, v_max=1e-1, pasos=10000):
@@ -108,23 +218,33 @@ def encontrar_intervalo(P, T, v_min=1e-5, v_max=1e-1, pasos=10000):
             return v_vals[i], v_vals[i + 1]
     return None, None
 
-# --- Gráfico general ---
 def generar_grafico_general(v_ideal, v_real, P, T):
-    # Buscar un intervalo que contenga la raíz y dé contexto visual
-    v_min = max(b * 1.001, v_real * 0.5)
-    v_max = v_real * 1.5
+    # Margen visual para graficar
+    v_min = min(v_real, v_ideal) * 0.5
+    v_max = max(v_real, v_ideal) * 1.5
 
     v_vals = np.linspace(v_min, v_max, 1000)
-    f_vals = [van_der_waals_eq(v, P, T) for v in v_vals]
+
+    f_vals = []
+    for v in v_vals:
+        try:
+            f_vals.append(van_der_waals_eq(v, P, T))
+        except:
+            f_vals.append(np.nan)
+
+    f_vals = np.array(f_vals)
+    v_vals = np.array(v_vals)
+    mask = np.isfinite(f_vals)
+    v_plot = v_vals[mask]
+    f_plot = f_vals[mask]
 
     plt.figure(figsize=(8, 5))
-    plt.plot(v_vals, f_vals, label='f(v)', color='blue')
+    plt.plot(v_plot, f_plot, label='f(v)', color='blue')
     plt.axhline(0, color='black', linestyle='--', linewidth=1)
-
     plt.axvline(v_ideal, color='red', linestyle=':', linewidth=1.5, label=f'v_ideal ≈ {v_ideal:.6f}')
     plt.axvline(v_real, color='green', linestyle='--', linewidth=1.5, label=f'v_real ≈ {v_real:.6f}')
 
-    plt.title('Función de Van der Waals a 0.5 MPa', fontsize=14)
+    plt.title(f'Función de Van der Waals a {P/1e6:.1f} MPa', fontsize=14)
     plt.xlabel('Volumen molar [m³/mol]')
     plt.ylabel('f(v)', fontsize=12)
     plt.grid(True, linestyle='--', alpha=0.5)
@@ -136,6 +256,8 @@ def generar_grafico_general(v_ideal, v_real, P, T):
     plt.close()
     buf.seek(0)
     return StreamingResponse(buf, media_type='image/png')
+
+
 
 def generar_grafico_zoom(v_real, P, T):
     delta = v_real * 0.2  # Zoom de ±20% alrededor de la raíz
@@ -203,20 +325,22 @@ def taylor_vdw(P, T, v0=None, tol=1e-8, max_iter=100):
 # --- Comparación de métodos ---
 def comparar_metodos_vdw(P=0.5e6, T=200):
     salida = [f"🧪 Comparación de métodos para P = {P/1e6:.1f} MPa, T = {T} K\n"]
-    
+
     # Volumen ideal
     v_ideal = R * T / P
     salida.append(f"📌 Volumen ideal: {v_ideal:.6e} m³/mol")
 
     # Ejecutar ambos métodos sobre el mismo intervalo
-    a = 0.001
-    b = 0.05
+    a = b * 1.01
+    b_fin = v_ideal * 10
     tol = 1e-6
     max_iter = 50
 
     try:
         start_taylor = time.perf_counter()
-        historial_taylor, historial_combinado, _ = ejecutar_metodos_con_comparacion(a, b, tol, max_iter)
+        historial_taylor, historial_combinado, _ = ejecutar_metodos_con_comparacion(
+            a, b_fin, tol, max_iter, P=P, T=T
+        )
         end_taylor = time.perf_counter()
 
         # Resultados método Taylor
@@ -250,6 +374,7 @@ def comparar_metodos_vdw(P=0.5e6, T=200):
         salida.append(f"❌ Error al aplicar los métodos: {e}")
 
     return "\n".join(salida)
+
 
 EXPLICACION_INCISO_A = """
 🔬 Correcciones del modelo de Van der Waals:

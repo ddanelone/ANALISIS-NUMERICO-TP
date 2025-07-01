@@ -79,13 +79,10 @@ export async function handleInciso1A({
     // Gráfico extra: f(x) = e⁻ˣ − x con su raíz
     let graficoExtra: string | null = null;
     try {
-      const res = await fetch(
-        `${API_BASE_URL}/tp3/raices/grafico-f-exponencial`,
-        {
-          method: "GET",
-          headers: { Accept: "image/png" },
-        }
-      );
+      const res = await fetch(`${API_BASE_URL}/tp3/raices/grafico-f-enferma`, {
+        method: "GET",
+        headers: { Accept: "image/png" },
+      });
       if (res.ok) {
         const blob = await res.blob();
         graficoExtra = URL.createObjectURL(blob);

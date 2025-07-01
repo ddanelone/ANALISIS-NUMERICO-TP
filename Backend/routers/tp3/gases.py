@@ -1,10 +1,8 @@
 from fastapi import APIRouter, Response
 from fastapi.responses import PlainTextResponse, StreamingResponse
 
-from services.tp3.gases import EXPLICACION_INCISO_A, PROBLEMAS_INCISO_A, PROBLEMAS_INCISO_B, comparar_metodos_vdw, generar_grafico_gases, generar_grafico_general, generar_grafico_volumenes_comparados, generar_grafico_zoom
+from services.tp3.gases import EXPLICACION_INCISO_A, PROBLEMAS_INCISO_A, PROBLEMAS_INCISO_B, comparar_metodos_vdw, ejecutar_metodos_con_comparacion, generar_grafico_gases, generar_grafico_general, generar_grafico_volumenes_comparados, generar_grafico_zoom
 from services.tp3.presentacion_gases import generar_grafico_comparativo_gral, generar_grafico_comparativo_z
-from services.tp3.raices import ejecutar_metodos_con_comparacion
-
 
 router = APIRouter(
     prefix="/gases",
@@ -57,15 +55,21 @@ def grafico_gases():
 def grafico_gas():
     P = 0.5e6
     T = 200.0
-    R = 8.314  # J/(mol·K)
+    R = 8.314
+    b = 4.27e-5 
 
-    _, historial_combinado, _ = ejecutar_metodos_con_comparacion(a=0.001, b=0.05)
+    v_ideal = R * T / P
+
+    # ✅ Intervalo adaptado a la presión (como en calcular_volumenes)
+    a_ini = b * 1.01
+    b_fin = v_ideal * 10
+
+    _, historial_combinado, _ = ejecutar_metodos_con_comparacion(a=a_ini, b=b_fin, P=P, T=T)
 
     if not historial_combinado:
         return {"error": "No se pudo calcular volumen real para graficar"}
 
     v_real = historial_combinado[-1]["x"]
-    v_ideal = R * T / P
 
     return generar_grafico_general(v_ideal, v_real, P, T)
 
@@ -73,19 +77,22 @@ def grafico_gas():
 def grafico_zoom_gas():
     P = 0.5e6
     T = 200.0
+    R = 8.314
+    b = 4.27e-5 
 
-    # Usamos los mismos límites iniciales que en 2.b
-    a_ini = 0.001
-    b_fin = 0.05
+    v_ideal = R * T / P
 
-    _, historial_combinado, _ = ejecutar_metodos_con_comparacion(a_ini, b_fin)
+    # ✅ Usamos intervalo adaptado a la presión
+    a_ini = b * 1.01
+    b_fin = v_ideal * 10
+
+    _, historial_combinado, _ = ejecutar_metodos_con_comparacion(a=a_ini, b=b_fin, P=P, T=T)
 
     if not historial_combinado:
         return {"error": "No se pudo calcular volumen real para graficar"}
 
     v_real = historial_combinado[-1]["x"]
     return generar_grafico_zoom(v_real, P, T)
-
  
 @router.get("/taylor-vdw", response_class=PlainTextResponse)
 def aplicar_taylor_vdw():
@@ -122,9 +129,15 @@ def resultado_taylor_05mpa():
     P = 0.5e6
     T = 200.0
     R = 8.314  # J/(mol·K)
+    b = 4.27e-5 
 
-    # Ejecutar ambos métodos
-    historial_taylor, historial_combinado, log = ejecutar_metodos_con_comparacion(a=0.001, b=0.05)
+    # Ejecutar ambos métodos con P y T correctos
+    historial_taylor, historial_combinado, log = ejecutar_metodos_con_comparacion(
+        a=b * 1.01,
+        b=(R * T / P) * 10,
+        P=P,
+        T=T
+    )
 
     # Calcular volumen ideal
     v_ideal = R * T / P
@@ -145,3 +158,4 @@ def resultado_taylor_05mpa():
         "diferencia_combinado_%": f"{dif_combinado:.4f}",
         "log": log
     }
+

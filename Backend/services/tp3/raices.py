@@ -9,11 +9,15 @@ from scipy.optimize import brentq
 from io import BytesIO
 from fastapi.responses import StreamingResponse
 
+
 def obtener_funciones_expr():
     x = sp.Symbol('x')
-    f_expr = sp.exp(-x) - x # type: ignore
+
+    f_expr = sp.exp(-x) * sp.cos(5 * x) - sp.Rational(1, 100) * x # type: ignore
+
     f1_expr = sp.diff(f_expr, x)
     f2_expr = sp.diff(f1_expr, x)
+    
     return x, f_expr, f1_expr, f2_expr
 
 def obtener_funciones_numericas():
@@ -23,7 +27,7 @@ def obtener_funciones_numericas():
     f2 = sp.lambdify(x, f2_expr, 'numpy')
     return f, f1, f2
 
-def metodo_taylor_segundo_orden(f, f1, f2, x0=1.5, tol=1e-6, max_iter=50):
+def metodo_taylor_segundo_orden(f, f1, f2, x0=3.0, tol=1e-12, max_iter=50):
     historial = []
     salida = []
 
@@ -129,43 +133,60 @@ def graficar_iteraciones(historial, f, funcion_str="f(x)"):
     x_max = max(xs) + margin
     x_vals = np.linspace(x_min, x_max, 400)
     y_vals = f(x_vals)
-    
+
+    ys_all = list(y_vals) + ys
+    y_range = max(ys_all) - min(ys_all)
+    offset = 0.05 * y_range
+
     plt.figure(figsize=(10, 6))
     plt.plot(x_vals, y_vals, label=f'${funcion_str}$', color='blue', linewidth=2)
     plt.axhline(0, color='black', linewidth=0.8, linestyle='--')
-    
+
     for i, (xi, yi) in enumerate(zip(xs, ys)):
         color = 'red' if i < len(xs)-1 else 'green'
         marker = 'o' if i < len(xs)-1 else '*'
         size = 70 if i < len(xs)-1 else 120
         label = f'Iteración {i}' if i < len(xs)-1 else 'Raíz aproximada'
-        
+
         plt.scatter(xi, yi, color=color, s=size, edgecolors='black',
                     zorder=5, label=label, marker=marker)
-        plt.text(xi, yi + 0.08*np.sign(yi), f'$x_{i}$',
-                 fontsize=10, ha='center', va='bottom' if yi > 0 else 'top')
-        
+        plt.text(
+            xi,
+            yi + offset if yi >= 0 else yi - offset,
+            f'$x_{i}$',
+            fontsize=10,
+            ha='center',
+            va='bottom' if yi >= 0 else 'top'
+        )
+
         if i < len(xs) - 1:
             plt.annotate('', xy=(historial[i+1]['x'], historial[i+1]['f']), xytext=(xi, yi),
                          arrowprops=dict(arrowstyle='->', color='gray',
                                          lw=1.5, shrinkA=8, shrinkB=8))
-    
+
     plt.axvline(xs[-1], color='green', linestyle=':', alpha=0.5)
+    
+    # Ajustar los límites verticales para evitar recortes y mejorar aspecto
+    y_min = min(ys_all) - 2 * offset
+    y_max = max(ys_all) + 2 * offset
+    plt.ylim(y_min, y_max)
+
     plt.title(f'Método de Taylor (2do orden) - $f(x) = {funcion_str}$', fontsize=14)
     plt.xlabel('$x$', fontsize=12)
     plt.ylabel('$f(x)$', fontsize=12)
     plt.grid(True, linestyle='--', alpha=0.3)
     plt.legend(loc='best')
     plt.tight_layout()
-    
+
     buffer = io.BytesIO()
     plt.savefig(buffer, format='png')
     plt.close()
     buffer.seek(0)
-    
+
     return buffer
 
-def metodo_taylor_biseccion_con_log(a, b, tol=1e-6, max_iter=50):
+
+def metodo_taylor_biseccion_con_log(a, b, tol=1e-12, max_iter=50):
     f, f1, f2 = obtener_funciones_numericas()
     log = io.StringIO()
     print("Método combinado: Taylor (2da derivada) + Bisección\n", file=log)
@@ -293,11 +314,7 @@ def ejecutar_metodos_con_comparacion(a=0.1, b=18.0, tol=1e-6, max_iter=50):
             a = x0
 
         x0 = x1
-        
-        print("x0:", x0)
-        print("a, b:", a, b)
-        print("tol:", tol)
-        print("f(x0):", f(x0))  # para ver cómo empieza el método
+
     end_taylor = time.perf_counter()
     tiempo_taylor = end_taylor - start_taylor
 
@@ -306,7 +323,7 @@ def ejecutar_metodos_con_comparacion(a=0.1, b=18.0, tol=1e-6, max_iter=50):
     historial_combinado, log_combinado = metodo_taylor_biseccion_con_log(a, b, tol, max_iter)
     end_combinado = time.perf_counter()
     tiempo_combinado = end_combinado - start_combinado
-    
+
     print(f"Iteraciones del método de Taylor: {len(historial_taylor)}", file=log)
     print(f"Iteraciones del método combinado: {len(historial_combinado)}", file=log)
 
@@ -320,36 +337,73 @@ def ejecutar_metodos_con_comparacion(a=0.1, b=18.0, tol=1e-6, max_iter=50):
        mejora = tiempo_taylor / tiempo_combinado
        print(f"Relación de velocidad (Taylor/Combinado): {mejora:.2f}x", file=log)
 
+    # --- Comparaciones extra ---
+    # Método más rápido
+    if tiempo_taylor < tiempo_combinado:
+        print("Método más rápido: Taylor puro", file=log)
+    elif tiempo_combinado < tiempo_taylor:
+        print("Método más rápido: Método combinado Taylor-Bisección", file=log)
+    else:
+        print("Método más rápido: ¡Empate!", file=log)
+
+    # Método con menos iteraciones
+    iter_taylor = len(historial_taylor)
+    iter_combinado = len(historial_combinado)
+    if iter_taylor < iter_combinado:
+        print("Método con menos iteraciones: Taylor puro", file=log)
+    elif iter_combinado < iter_taylor:
+        print("Método con menos iteraciones: Método combinado Taylor-Bisección", file=log)
+    else:
+        print("Método con menos iteraciones: ¡Empate!", file=log)
+
     return historial_taylor, historial_combinado, log.getvalue() + "\n\n" + log_combinado
+
  
 def graficar_convergencia_loglog():
-   
+    # Obtener funciones
     f, f1, f2 = obtener_funciones_numericas()
-    raiz_real = 0.5671432904097838  # Raíz conocida
-    historial, _ = metodo_taylor_segundo_orden(f, f1, f2, x0=1.5, tol=1e-6, max_iter=50)
+    x, f_expr, *_ = obtener_funciones_expr()
 
-    errors = [abs(step['x_next'] - raiz_real) for step in historial if abs(step['x_next'] - raiz_real) > 0] #type:ignore
+    # Etiqueta elegante para el gráfico
+    funcion_str = sp.latex(f_expr)
+
+    # Buscar raíz real con Brent en un intervalo con cambio de signo
+    try:
+        raiz_real = brentq(f, 0.3, 3.5)  
+        print(raiz_real)
+    except ValueError:
+        raise ValueError("No se pudo encontrar raíz real en el intervalo dado.")
+
+    # Ejecutar método de Taylor
+    historial, _ = metodo_taylor_segundo_orden(f, f1, f2, x0=3.0, tol=1e-12, max_iter=50)
+
+    # Calcular errores absolutos
+    errors = [abs(step['x_next'] - raiz_real) for step in historial if abs(step['x_next'] - raiz_real) > 0]
     iterations = np.arange(1, len(errors) + 1, dtype=float)
 
     if not errors:
         raise ValueError("No se generaron errores para graficar.")
 
+    # Crear gráfico
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
 
+    # Curva de referencia O(n^-p)
     p_ref = 3
     C = errors[0] * (iterations[0] ** p_ref)
     ref_curve = C * iterations**(-p_ref)
 
+    # Gráfico de errores log-log
     ax1.loglog(iterations, errors, marker='o', linestyle='-', color='blue',
                linewidth=2, markersize=8, label='Error absoluto')
     ax1.loglog(iterations, ref_curve, 'k--', label=f'Referencia: $O(n^{{-{p_ref}}})$')
-    ax1.set_title('Convergencia del Método de Taylor (2do orden)\nf(x) = e^{-x} - x', fontsize=14)
+    ax1.set_title(f'Convergencia del Método de Taylor (2º orden)\n$f(x) = {funcion_str}$', fontsize=14)
     ax1.set_xlabel('Iteración')
     ax1.set_ylabel('Error absoluto')
     ax1.grid(True, which='both', linestyle='--', linewidth=0.5, alpha=0.7)
     ax1.set_xticks(iterations)
     ax1.legend()
 
+    # Gráfico de razón de errores
     if len(errors) > 2:
         ratios = np.array(errors[1:]) / np.array(errors[:-1])
         ax2.plot(iterations[1:], ratios, 's-', color='red', markersize=8,
@@ -357,7 +411,7 @@ def graficar_convergencia_loglog():
         ax2.axhline(y=0, color='k', linestyle='--', linewidth=0.8)
         ax2.set_title('Tasa de Convergencia Numérica')
         ax2.set_xlabel('Iteración')
-        ax2.set_ylabel('$e_{n+1}/e_n$')
+        ax2.set_ylabel('$\\frac{e_{n+1}}{e_n}$')
         ax2.grid(True, linestyle='--', linewidth=0.5, alpha=0.7)
         ax2.legend()
     else:
@@ -373,9 +427,12 @@ def graficar_convergencia_loglog():
     return buffer
  
 def graficar_taylor_local(iteration: int):
-    delta_zoom=0.1
+    delta_zoom = 0.1
+    delta_amplio = 1.5
+
+    # Obtener funciones
     f, f1, f2 = obtener_funciones_numericas()
-    historial, _ = metodo_taylor_segundo_orden(f, f1, f2, x0=1.5, tol=1e-6, max_iter=50)
+    historial, _ = metodo_taylor_segundo_orden(f, f1, f2, x0=3.0, tol=1e-12, max_iter=50)
 
     if iteration < 0 or iteration >= len(historial):
         raise ValueError("Número de iteración inválido.")
@@ -387,15 +444,16 @@ def graficar_taylor_local(iteration: int):
     f2n = step['f2']
     xn_next = step['x_next']
 
+    # Aproximación de Taylor 2º orden
     def taylor2(x_val):
         return fxn + f1n * (x_val - xn) + 0.5 * f2n * (x_val - xn) ** 2
 
-    # --- Gráfico 1: Intervalo amplio fijo ---
-    x_amplio = np.linspace(0, 0.9, 300)
+    # --- Gráfico 1: Intervalo amplio dinámico centrado en xn ---
+    x_amplio = np.linspace(xn - delta_amplio, xn + delta_amplio, 300)
     y_orig_amplio = f(x_amplio)
     y_taylor_amplio = taylor2(x_amplio)
 
-    # --- Gráfico 2: Zoom local centrado en xn ---
+    # --- Gráfico 2: Zoom local ---
     x_local = np.linspace(xn - delta_zoom, xn + delta_zoom, 300)
     y_orig_local = f(x_local)
     y_taylor_local = taylor2(x_local)
@@ -412,12 +470,12 @@ def graficar_taylor_local(iteration: int):
     axs[0].axvline(xn, color='red', linestyle=':', linewidth=1)
     axs[0].axvline(xn_next, color='blue', linestyle=':', linewidth=1)
     axs[0].fill_between(x_amplio, y_orig_amplio, y_taylor_amplio, color='lightgreen', alpha=0.3)
-    axs[0].set_title(f'Intervalo amplio fijo\nIteración {iteration}')
+    axs[0].set_title(f'Intervalo amplio dinámico\nIteración {iteration}')
     axs[0].set_xlabel('$x$')
     axs[0].set_ylabel('$f(x)$')
     axs[0].legend(fontsize=9)
     axs[0].grid(True, linestyle='--', alpha=0.6)
-    axs[0].set_xlim(0, 0.9)
+    axs[0].set_xlim(xn - delta_amplio, xn + delta_amplio)
     y_min = min(np.min(y_orig_amplio), np.min(y_taylor_amplio)) - 0.1
     y_max = max(np.max(y_orig_amplio), np.max(y_taylor_amplio)) + 0.1
     axs[0].set_ylim(y_min, y_max)
@@ -437,11 +495,10 @@ def graficar_taylor_local(iteration: int):
     axs[1].set_ylabel('$f(x)$')
     axs[1].legend(fontsize=9)
     axs[1].grid(True, linestyle='--', alpha=0.6)
-
+    axs[1].set_xlim(xn - delta_zoom, xn + delta_zoom)
     y_min_local = min(np.min(y_orig_local), np.min(y_taylor_local)) - 0.1
     y_max_local = max(np.max(y_orig_local), np.max(y_taylor_local)) + 0.1
     axs[1].set_ylim(y_min_local, y_max_local)
-    axs[1].set_xlim(xn - delta_zoom, xn + delta_zoom)
 
     plt.tight_layout()
     buffer = io.BytesIO()
@@ -451,7 +508,10 @@ def graficar_taylor_local(iteration: int):
     return buffer
  
 def graficar_comparacion_convergencia():
-    historial_taylor, historial_combinado, _ = ejecutar_metodos_con_comparacion()
+    historial_taylor, historial_combinado, _ = ejecutar_metodos_con_comparacion(
+    a=2.5, b=3.5, tol=1e-6, max_iter=50
+)
+
 
     errores_taylor = [step['error'] for step in historial_taylor]
     errores_combinado = [step['error'] for step in historial_combinado]
@@ -580,33 +640,36 @@ En nuestras pruebas, el método combinado:
 
 """
 
-def generar_grafico_funcion_exponencial():
+def generar_grafico_funcion_enferma():
     def f(x):
-        return np.exp(-x) - x
+        return np.exp(-x) * np.cos(5 * x) - (1 / 100) * x
 
-    raiz = brentq(f, 0, 1)
-    x_vals = np.linspace(-2, 4, 800)
+    # Buscar una raíz real en un intervalo donde ya sabemos que hay una (por ejemplo, cerca de x = 1.5)
+    raiz = brentq(f, 2.5, 3.5)
+
+    x_vals = np.linspace(-1, 6, 1000)
     y_vals = f(x_vals)
 
     fig, ax = plt.subplots(figsize=(10, 6))
-    ax.plot(x_vals, y_vals, label=r'$f(x) = e^{-x} - x$', color='blue')
+    ax.plot(x_vals, y_vals, label=r'$f(x) = e^{-x} \cos(5x) - \frac{1}{100}x$', color='blue', linewidth=2)
     ax.axhline(0, color='black', linewidth=0.8, linestyle='--')
-    ax.axvline(0, color='gray', linestyle='--', linewidth=0.7)
-    ax.plot(raiz, f(raiz), 'ro', label=f'Raíz ≈ {raiz:.6f}') # type: ignore
-    ax.annotate(f'Raíz ≈ {raiz:.6f}', xy=(raiz, 0), xytext=(raiz + 0.5, 0.5), # type: ignore
+    ax.axvline(raiz, color='red', linestyle=':', linewidth=1) #type: ignore
+    ax.plot(raiz, f(raiz), 'ro', label=f'Raíz ≈ {raiz:.6f}') #type: ignore
+    ax.annotate(f'Raíz ≈ {raiz:.6f}',
+                xy=(raiz, 0),#type: ignore
+                xytext=(raiz + 0.5, 0.2),#type: ignore
                 arrowprops=dict(arrowstyle='->', color='red'),
                 fontsize=10, color='red')
 
-    ax.set_title('Visualización ampliada de $f(x) = e^{-x} - x$ y su raíz')
-    ax.set_xlabel('x')
-    ax.set_ylabel('f(x)')
-    ax.grid(True)
+    ax.set_title(r'Visualización de $f(x) = e^{-x} \cos(5x) - \frac{1}{100}x$ y su raíz', fontsize=14)
+    ax.set_xlabel('$x$', fontsize=12)
+    ax.set_ylabel('$f(x)$', fontsize=12)
+    ax.grid(True, linestyle='--', alpha=0.5)
     ax.legend()
     fig.tight_layout()
 
-    # Guardar en buffer
     buf = BytesIO()
-    plt.savefig(buf, format='png')
+    plt.savefig(buf, format='png', dpi=300)
     plt.close(fig)
     buf.seek(0)
 

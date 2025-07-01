@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.responses import PlainTextResponse
 from starlette.responses import StreamingResponse
 
-from services.tp3.raices import PROBLEMAS_INCISO_A, PROBLEMAS_INCISO_B, ejecutar_metodos_con_comparacion, generar_grafico_funcion_exponencial, graficar_comparacion_convergencia, graficar_convergencia_loglog, graficar_iteraciones, graficar_taylor_local, metodo_taylor_segundo_orden, obtener_funciones_numericas
+from services.tp3.raices import PROBLEMAS_INCISO_A, PROBLEMAS_INCISO_B, ejecutar_metodos_con_comparacion, generar_grafico_funcion_enferma, graficar_comparacion_convergencia, graficar_convergencia_loglog, graficar_iteraciones, graficar_taylor_local, metodo_taylor_segundo_orden, obtener_funciones_numericas
 
 router = APIRouter(
     prefix="/raices",
@@ -50,7 +50,7 @@ def grafico_funcion_y_iteraciones():
     if not historial:
         raise HTTPException(status_code=500, detail="No se generaron iteraciones para graficar.")
     
-    buffer = graficar_iteraciones(historial, f, "e^{-x} - x")
+    buffer = graficar_iteraciones(historial, f, r"e^{-x} \cos(5x) - \frac{1}{100}x")
     return StreamingResponse(buffer, media_type="image/png")
 
 @router.get("/grafico2")
@@ -69,9 +69,13 @@ def grafico_taylor_local_endpoint(iteration: int):
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+@router.get("/grafico-f-enferma", summary="Gráfico de $f(x) = e^{-x} \\cos(5x) - \\frac{1}{100}x$ con raíz destacada")
+def obtener_grafico_fun_enferma():
+    return generar_grafico_funcion_enferma()
+ 
 @router.get("/inciso1b", response_class=PlainTextResponse)
 def inciso1b():
-    a, b = 0.1, 18
+    a, b = 2.5, 3.5
     tol = 1e-6
     max_iter = 50
 
@@ -94,6 +98,3 @@ def obtener_dificultada():
 def obtener_dificultadb():
        return PROBLEMAS_INCISO_B
     
-@router.get("/grafico-f-exponencial", summary="Gráfico de f(x) = e⁻ˣ − x con raíz")
-def obtener_grafico_exponencial():
-    return generar_grafico_funcion_exponencial()

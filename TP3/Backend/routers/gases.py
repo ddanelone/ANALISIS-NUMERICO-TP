@@ -122,8 +122,6 @@ def resultado_taylor_05mpa():
     T = 200.0
     R = 8.314  # J/(mol·K)
 
-    # Ajustar valores globales si tus funciones dependen de ellos (por ejemplo en van_der_waals_eq)
-
     # Ejecutar ambos métodos
     historial_taylor, historial_combinado, log = ejecutar_metodos_con_comparacion(a=0.001, b=0.05)
 
