@@ -44,12 +44,19 @@ def calcular_volumenes():
 
         resultados.append((P, v_ideal, v_real, mensaje))
 
-        print(f"\nPresión: {P/1e6:.1f} MPa")
-        print(f"v_ideal: {v_ideal:.6e}")
-        print(f"v_real: {v_real}")
-        print(f"{mensaje}")
+        try:
+            print(f"\nPresión: {P/1e6:.1f} MPa")
+            print(f"v_ideal: {v_ideal:.6e}")
+            print(f"v_real: {v_real}")
+            print(mensaje)
+        except UnicodeEncodeError:
+            print(f"\nPresion: {P/1e6:.1f} MPa")
+            print(f"v_ideal: {v_ideal:.6e}")
+            print(f"v_real: {v_real}")
+            print(mensaje.encode("ascii", "replace").decode())
 
     return resultados
+
 
 def generar_grafico_gases():
     resultados = calcular_volumenes()

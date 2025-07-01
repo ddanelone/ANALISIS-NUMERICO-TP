@@ -17,17 +17,17 @@ def obtener_consigna():
     return CONSIGNA
 
 
-@router.get("/inciso-1/grafico", summary="Comparación de señales EEG crudas y filtradas")
+@router.get("/grafico", summary="Comparación de señales EEG crudas y filtradas")
 def obtener_grafico():
     imagen = generar_grafico_comparativo()
     return StreamingResponse(imagen, media_type="image/png")
 
-@router.get("/inciso-1/grafico2", summary="Espectro FFT de señales EEG (línea continua)")
+@router.get("/grafico2", summary="Espectro FFT de señales EEG (línea continua)")
 def obtener_grafico_fft():
     imagen = generar_grafico_fft_lineas()
     return StreamingResponse(imagen, media_type="image/png")
 
-@router.get("/inciso-1/grafico3", summary="Espectro FFT de señales EEG (diagrama de tallo)")
+@router.get("/grafico3", summary="Espectro FFT de señales EEG (diagrama de tallo)")
 def obtener_grafico_fft_tallo():
     imagen = generar_grafico_fft_tallo()
     return StreamingResponse(imagen, media_type="image/png")

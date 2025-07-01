@@ -7,7 +7,7 @@ from starlette.responses import StreamingResponse
 from services.tp3.raices import PROBLEMAS_INCISO_A, PROBLEMAS_INCISO_B, ejecutar_metodos_con_comparacion, generar_grafico_funcion_exponencial, graficar_comparacion_convergencia, graficar_convergencia_loglog, graficar_iteraciones, graficar_taylor_local, metodo_taylor_segundo_orden, obtener_funciones_numericas
 
 router = APIRouter(
-    prefix="/api/raices",
+    prefix="/raices",
     tags=["TP3 - Búsqueda de Raíces en funciones no lineales"],
     responses={404: {"description": "Endpoint no encontrado"}}
 )

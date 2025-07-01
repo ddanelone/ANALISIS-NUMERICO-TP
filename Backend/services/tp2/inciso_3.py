@@ -5,7 +5,7 @@ from fastapi.responses import StreamingResponse
 import imageio.v3 as iio
 
 # === CONSTANTES ===
-PORTADORA_PATH = "data/tp2/globo.png"
+PORTADORA_PATH = "data/tp2/imagen_portadora.png"
 OCULTA_PATH = "data/tp2/wp.png"
 ESTEGO_PATH = "data/tp2/imagen_estego2.png"
 RECUPERADA_PATH = "data/tp2/imagen_recuperada2.png"
@@ -155,10 +155,23 @@ def get_oculta_path():
     return OCULTA_PATH
 
 CONSIGNA_DELTA = """
-🎯 **Consigna del inciso 2: Esteganografía por Transformada de Fourier 2D**
+🎯 Consigna del inciso 3: Esteganografía por Transformada de Fourier 2D
 
-Se solicita ocultar una imagen monocromática dentro de otra utilizando la Transformada de Fourier 2D.
-Se debe aplicar una codificación sobre los coeficientes de la imagen portadora para introducir, con redundancia, los bits de la imagen a ocultar. Luego, debe implementarse el decodificador correspondiente para verificar la calidad de recuperación de la imagen oculta.
+Se debe modificar las componentes de la Transformada de Fourier 2D (TF2D) utilizando un parámetro arbitrario delta y una modificación basada en un valor q. Para cada componente compleja a + ib, se calcularán los nuevos valores a' y b' con la siguiente fórmula:
 
-Ambas imágenes son en escala de grises, donde cada píxel representa un byte de información.
+a' = signo × q × delta
+
+donde
+
+signo = 1 si a es mayor o igual a 0, y signo = -1 si a es menor que 0,
+
+q es el valor absoluto del redondeo de a dividido por delta.
+
+El mismo procedimiento se aplica para modificar b'.
+
+La paridad de q es la que almacena el bit secreto: será par si el bit a ocultar es 0, e impar si el bit a ocultar es 1. Para asegurar esto, se suma 1 a q cuando sea necesario.
+
+Finalmente, se aplica la transformada inversa de Fourier para reconstruir la imagen modificada, llamada imagen esteganográfica.
+
+Se recomienda usar diferentes valores de delta en distintos órdenes de magnitud y analizar cómo afectan la imagen esteganográfica, especialmente en términos de la Transformada de Fourier y sus propiedades. Esto permitirá obtener conclusiones sobre el impacto de delta en la calidad y características de la imagen oculta.
 """

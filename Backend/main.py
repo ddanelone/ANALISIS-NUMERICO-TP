@@ -16,15 +16,15 @@ from routers.tp2 import inciso_3 as tp2_inciso_3
 app = FastAPI()
 
 # Incluir routers
-app.include_router(tp1_inciso_1.router, prefix="/tp1")
-app.include_router(tp1_inciso_2.router, prefix="/tp1")
-app.include_router(inciso_3.router, prefix="/tp1")
-app.include_router(inciso_4.router, prefix="/tp1")
-app.include_router(tp2_inciso_1.router, prefix="/tp2")
-app.include_router(tp2_inciso_2.router, prefix="/tp2")
-app.include_router(tp2_inciso_3.router, prefix="/tp2")
-app.include_router(raices.router, prefix="/tp3")
-app.include_router(gases.router, prefix="/tp3")
+app.include_router(tp1_inciso_1.router, prefix="/api/tp1")
+app.include_router(tp1_inciso_2.router, prefix="/api/tp1")
+app.include_router(inciso_3.router, prefix="/api/tp1")
+app.include_router(inciso_4.router, prefix="/api/tp1")
+app.include_router(tp2_inciso_1.router, prefix="/api/tp2")
+app.include_router(tp2_inciso_2.router, prefix="/api/tp2")
+app.include_router(tp2_inciso_3.router, prefix="/api/tp2")
+app.include_router(raices.router, prefix="/api/tp3")
+app.include_router(gases.router, prefix="/api/tp3")
 
 # CORS
 origins = [

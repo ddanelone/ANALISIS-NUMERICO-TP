@@ -73,6 +73,6 @@ bits significativos de cada píxel, reconstruir el mensaje en binario y converti
 Finalmente, se debe verificar que el mensaje decodificado coincida con el mensaje original. Mostrar tanto
 la imagen original como la imagen estego, y comparar el mensaje decodificado con el mensaje original.
 Obtener conclusiones a partir de la comparacion entre ambas imagenes. ¿Cual es la longitud maxima de
-un mensaje que se puede transmitir de acuerdo al tamaño de la imagen original? ¿Como podria ampliar
+un mensaje que se puede transmitir de acuerdo al tamañ         o de la imagen original? ¿Como podria ampliar
 la cantidad de informacion enviada utilizando la misma imagen?
 """

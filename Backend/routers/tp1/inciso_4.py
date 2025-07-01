@@ -26,23 +26,23 @@ router = APIRouter(
 def obtener_consigna():
     return CONSIGNA4
 
-@router.get("/inciso-4/explicacion", summary="Explicación teórica de autocorrelación en señales EEG")
+@router.get("/explicacion", summary="Explicación teórica de autocorrelación en señales EEG")
 def obtener_explicacion_inciso_4():
     return PlainTextResponse(EXPLICACION_INCISO_4)
 
 
-@router.get("/inciso-4/problemas", summary="Problemas, observaciones y conclusiones del inciso 4")
+@router.get("/problemas", summary="Problemas, observaciones y conclusiones del inciso 4")
 def obtener_problemas_inciso_4():
     return PlainTextResponse(PROBLEMAS_INCISO_4)
 
 
-@router.get("/inciso-4/grafico1", summary="Gráfico de autocorrelación para las tres señales EEG")
+@router.get("/grafico1", summary="Gráfico de autocorrelación para las tres señales EEG")
 def obtener_grafico_autocorrelacion():
     imagen = generar_grafico_autocorrelacion()
     return StreamingResponse(imagen, media_type="image/png")
 
 
-@router.get("/inciso-4/grafico2", summary="Distribución de potencia relativa por banda de frecuencia")
+@router.get("/grafico2", summary="Distribución de potencia relativa por banda de frecuencia")
 def obtener_grafico_potencia_por_bandas():
     senales = cargar_senales_filtradas()
     fs = obtener_fs()
@@ -55,7 +55,7 @@ def obtener_grafico_potencia_por_bandas():
     return StreamingResponse(imagen, media_type="image/png")
 
 
-@router.get("/inciso-4/analisis-bandas", summary="Salida tipo consola con resumen por bandas y señales")
+@router.get("/analisis-bandas", summary="Salida tipo consola con resumen por bandas y señales")
 def obtener_analisis_bandas():
     senales = cargar_senales_filtradas()
     fs = obtener_fs()

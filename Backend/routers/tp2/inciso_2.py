@@ -5,7 +5,7 @@ from PIL import Image
 import io
 from fastapi.responses import StreamingResponse
 
-router = APIRouter(prefix="/tp2/inciso_2", tags=["TP2 - Esteganografía con la Transformada 2D de Fourier - Inciso 2"])
+router = APIRouter(prefix="/inciso_2", tags=["TP2 - Esteganografía con la Transformada 2D de Fourier - Inciso 2"])
 
 
 @router.post("/ocultar", response_class=PlainTextResponse, summary="Ocultar imagen con FFT")

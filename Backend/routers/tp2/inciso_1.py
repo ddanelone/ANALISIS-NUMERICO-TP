@@ -2,7 +2,7 @@ from fastapi import APIRouter, Query
 from fastapi.responses import PlainTextResponse
 from services.tp2 import inciso_1
 
-router = APIRouter(prefix="/tp2/inciso_1", tags=["TP2 - Esteganografíca LSB -Inciso 1"])
+router = APIRouter(prefix="/inciso_1", tags=["TP2 - Esteganografíca LSB -Inciso 1"])
 
 
 @router.post("/ocultar", response_class=PlainTextResponse, summary="Ocultar mensaje en imagen")

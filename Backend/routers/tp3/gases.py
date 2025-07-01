@@ -7,7 +7,7 @@ from services.tp3.raices import ejecutar_metodos_con_comparacion
 
 
 router = APIRouter(
-    prefix="/api/gases",
+    prefix="/gases",
     tags=["TP3 - Aplicación a un sistema de Gases"],
     responses={404: {"description": "Endpoint no encontrado"}}
 )
@@ -122,8 +122,6 @@ def resultado_taylor_05mpa():
     P = 0.5e6
     T = 200.0
     R = 8.314  # J/(mol·K)
-
-    # Ajustar valores globales si tus funciones dependen de ellos (por ejemplo en van_der_waals_eq)
 
     # Ejecutar ambos métodos
     historial_taylor, historial_combinado, log = ejecutar_metodos_con_comparacion(a=0.001, b=0.05)

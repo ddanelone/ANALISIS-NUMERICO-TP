@@ -2,7 +2,7 @@ from fastapi import APIRouter, Body
 from fastapi.responses import PlainTextResponse, FileResponse
 from services.tp2 import inciso_3
 
-router = APIRouter(prefix="/tp2/inciso_3", tags=["TP2 - Esteganografía con la Transformada 2D de Fourier - Inciso 3"])
+router = APIRouter(prefix="/inciso_3", tags=["TP2 - Esteganografía con la Transformada 2D de Fourier - Inciso 3"])
 
 @router.post("/ocultar", response_class=PlainTextResponse, summary="Ocultar imagen usando TF2D y paridad")
 def ocultar_imagen(delta: int = Body(..., description="Valor de delta a utilizar")):

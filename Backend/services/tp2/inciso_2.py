@@ -4,7 +4,7 @@ import os
 
 # === Paths ===
 BASE_PATH = "data/tp2/"
-IMG_PORTADORA = os.path.join(BASE_PATH, "globo.png")
+IMG_PORTADORA = os.path.join(BASE_PATH, "imagen_portadora.png")
 IMG_OCULTA = os.path.join(BASE_PATH, "wp.png")
 IMG_ESTEGANOGRAFICA = os.path.join(BASE_PATH, "imagen_estego.tiff")
 IMG_RECUPERADA = os.path.join(BASE_PATH, "imagen_recuperada.png")
@@ -118,7 +118,7 @@ def get_recuperada_path():
 # === Texto enriquecido para endpoints informativos ===
 
 CONSIGNA_FFT = """
-🎯 **Consigna del inciso 2: Esteganografía por Transformada de Fourier 2D**
+🎯 Consigna del inciso 2: Esteganografía por Transformada de Fourier 2D
 
 Se solicita ocultar una imagen monocromática dentro de otra utilizando la Transformada de Fourier 2D.
 Se debe aplicar una codificación sobre los coeficientes de la imagen portadora para introducir, con redundancia, los bits de la imagen a ocultar. Luego, debe implementarse el decodificador correspondiente para verificar la calidad de recuperación de la imagen oculta.
@@ -127,7 +127,7 @@ Ambas imágenes son en escala de grises, donde cada píxel representa un byte de
 """
 
 EXPLICACION_FFT = """
-🧠 **Explicación teórica del método FFT para esteganografía**
+🧠 Explicación teórica del método FFT para esteganografía
 
 Se utiliza la FFT 2D para pasar la imagen portadora al dominio de la frecuencia.
 Luego se seleccionan pares de coeficientes simétricos y se codifica el bit modificando el signo de la parte imaginaria:
@@ -140,7 +140,7 @@ Para decodificar, se invierte el proceso y se reconstruyen los bytes originales.
 """
 
 PROBLEMAS_FFT = """
-⚠️ **Problemas encontrados**
+⚠️ Problemas encontrados
 
 - Mantener la simetría conjugada para no alterar la realcez de la imagen
 - Selección de posiciones válidas alejadas del centro para evitar artefactos
@@ -149,7 +149,7 @@ PROBLEMAS_FFT = """
 """
 
 CONCLUSIONES_FFT = """
-📌 **Conclusiones**
+📌 Conclusiones
 
 - El método FFT permite ocultar imágenes completas sin afectar visiblemente la imagen portadora
 - El nivel de recuperación depende fuertemente del número de repeticiones y el tamaño de las imágenes
