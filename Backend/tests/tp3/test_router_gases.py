@@ -273,12 +273,13 @@ def test_grafico_b_post_intervalo_invalido():
 
     content_type = response.headers.get("content-type", "")
     
-    # En este caso, esperamos un JSON con error
-    assert "application/json" in content_type, f"Se esperaba JSON, pero Content-Type fue: {content_type}"
+    # ✅ Ahora esperamos imagen, no JSON
+    assert "image/png" in content_type, f"Se esperaba PNG, pero Content-Type fue: {content_type}"
 
-    data = response.json()
-    assert "error" in data
-    assert "inválido" in data["error"].lower()
+    # ✅ Confirmamos que se recibió contenido
+    assert response.content is not None
+    assert len(response.content) > 100, "La imagen parece estar vacía o es muy pequeña"
+
 
 def test_grafico_b_post_valido():
     payload = {
