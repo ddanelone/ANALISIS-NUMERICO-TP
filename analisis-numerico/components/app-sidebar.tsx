@@ -6,6 +6,7 @@ import {
   AudioWaveform,
   ImagePlay,
   LayoutList,
+  Clipboard,
 } from "lucide-react";
 
 import {
@@ -18,6 +19,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { LogoUTNHoverCard } from "./logoUTNHoverCard";
 
 // Menu items.
 const items = [
@@ -25,6 +27,11 @@ const items = [
     title: "Dashboard",
     url: "/",
     icon: LayoutList,
+  },
+  {
+    title: "Planificación A.N.",
+    url: "presentacion",
+    icon: Clipboard,
   },
   {
     title: "Trabajo Práctico N°1",
@@ -61,9 +68,14 @@ const items = [
 export function AppSidebar() {
   return (
     <Sidebar>
-      <SidebarContent>
+      <SidebarContent className="flex flex-col">
+        <div className="px-4 py-3 border-b border-white/20">
+          <LogoUTNHoverCard />
+        </div>
         <SidebarGroup>
-          <SidebarGroupLabel>Resoluciones</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-lg font-semibold">
+            Opciones navegación:
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (

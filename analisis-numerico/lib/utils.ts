@@ -33,6 +33,25 @@ export async function fetchJSON<T = unknown>(url: string): Promise<T | null> {
   }
 }
 
+export async function fetchPostJSON<T = unknown>(
+  url: string,
+  data: Record<string, unknown>
+): Promise<T | null> {
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+
+    if (!res.ok) throw new Error(`Error ${res.status}: ${await res.text()}`);
+    return await res.json();
+  } catch (error) {
+    console.warn(`⚠️ fetchPostJSON(${url}) →`, error);
+    return null;
+  }
+}
+
 export async function fetchImagen(url: string): Promise<string | null> {
   try {
     const res = await fetch(url, { headers: { Accept: "image/png" } });

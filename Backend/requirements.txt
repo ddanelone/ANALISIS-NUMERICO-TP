@@ -7,3 +7,6 @@ sympy
 seaborn
 imageio
 pillow
+pydantic
+pytest
+httpx

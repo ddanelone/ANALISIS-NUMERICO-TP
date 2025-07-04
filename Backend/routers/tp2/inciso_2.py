@@ -16,7 +16,6 @@ def ocultar_imagen():
     """
     return inciso_2.ocultar_imagen_en_fft()
 
-
 @router.get("/extraer", response_class=PlainTextResponse, summary="Extraer imagen oculta")
 def extraer_imagen():
     """
@@ -25,7 +24,6 @@ def extraer_imagen():
     """
     return inciso_2.extraer_imagen_de_fft()
 
-
 @router.get("/portadora", response_class=FileResponse, summary="Obtener imagen portadora")
 def get_portadora():
     """
@@ -33,21 +31,12 @@ def get_portadora():
     """
     return FileResponse(inciso_2.get_portadora_path(), media_type="image/png")
 
-
 @router.get("/oculta", response_class=FileResponse, summary="Obtener imagen oculta original")
 def get_oculta():
     """
     Devuelve la imagen oculta original (`wp.png`) en escala de grises.
     """
     return FileResponse(inciso_2.get_oculta_path(), media_type="image/png")
-
-
-@router.get("/estego", response_class=FileResponse, summary="Obtener imagen esteganográfica")
-def get_estego():
-    """
-    Devuelve la imagen con la información oculta (`imagen_estego.tiff`).
-    """
-    return FileResponse(inciso_2.get_estego_path(), media_type="image/tiff")
 
 @router.get("/estego-png", response_class=StreamingResponse)
 def get_estego_png():
@@ -60,12 +49,20 @@ def get_estego_png():
 
     return StreamingResponse(buffer, media_type="image/png")
 
+
 @router.get("/recuperada", response_class=FileResponse, summary="Obtener imagen recuperada")
 def get_recuperada():
     """
     Devuelve la imagen recuperada tras decodificar la información oculta (`imagen_recuperada.png`).
     """
     return FileResponse(inciso_2.get_recuperada_path(), media_type="image/png")
+
+@router.get("/estego", response_class=FileResponse, summary="Obtener imagen esteganográfica")
+def get_estego():
+    """
+    Devuelve la imagen con la información oculta (`imagen_estego.tiff`).
+    """
+    return FileResponse(inciso_2.get_estego_path(), media_type="image/tiff")
 
 
 @router.get("/consigna", response_class=PlainTextResponse, summary="Consigna original")

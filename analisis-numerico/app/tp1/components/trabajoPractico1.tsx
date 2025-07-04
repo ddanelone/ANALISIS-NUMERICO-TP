@@ -125,6 +125,9 @@ const TrabajoPractico1 = () => {
       {/* Contenido principal */}
       <div className="flex-1 h-screen px-4 pt-10 lg:p-8 flex flex-col items-center">
         <div className="w-full max-w-5xl flex flex-col justify-start gap-6">
+          <h1 className="text-2xl font-bold text-center">
+            T.P.1: Transformada de Fourier
+          </h1>
           <PanelAccordion
             titulo="Consigna a resolver"
             contenido={consigna}

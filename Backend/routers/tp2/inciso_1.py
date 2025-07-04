@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import PlainTextResponse
 from services.tp2 import inciso_1
 
@@ -29,3 +29,18 @@ def get_consigna():
     Devuelve la consigna original del inciso 1 del TP2.
     """
     return inciso_1.CONSIGNA_LSB
+ 
+@router.get("/imagen-original")
+def get_imagen_original():
+    try:
+        return inciso_1.obtener_imagen_portadora()
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    
+
+@router.get("/imagen-estego")
+def get_imagen_estego():
+    try:
+        return inciso_1.obtener_imagen_estego()
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))

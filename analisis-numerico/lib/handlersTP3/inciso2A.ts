@@ -1,4 +1,4 @@
-import { fetchTexto, fetchJSON, fetchImagen, API_BASE_URL } from "../utils";
+import { fetchTexto, fetchImagen, API_BASE_URL, fetchPostJSON } from "../utils";
 
 export async function handleInciso2A({
   setConsigna,
@@ -36,14 +36,18 @@ export async function handleInciso2A({
       `${API_BASE_URL}/tp3/gases/dificultad-a`
     );
 
-    // Resultado (JSON)
-    const resultado = await fetchJSON<{
+    const resultado = await fetchPostJSON<{
       volumen_ideal: number;
       volumen_taylor: number;
       volumen_combinado: number;
       "diferencia_taylor_%": number;
       "diferencia_combinado_%": number;
-    }>(`${API_BASE_URL}/tp3/gases/resultado`);
+    }>(`${API_BASE_URL}/tp3/gases/resultado`, {
+      a: 0.364,
+      b: 0.00004267,
+      tol: 0.000001,
+      max_iter: 50,
+    });
 
     const textoSalida = `
 ${explicacionTexto}
@@ -65,6 +69,7 @@ ${explicacionTexto}
     const urls = [
       `${API_BASE_URL}/tp3/gases/grafico_comparativo_gral`,
       `${API_BASE_URL}/tp3/gases/grafico_comparativo_z`,
+      `${API_BASE_URL}/tp3/gases/grafico-f-vdw`,
       `${API_BASE_URL}/tp3/gases/grafico_comparacion_volumenes`,
     ];
     const imagenes: string[] = [];

@@ -10,6 +10,8 @@ import { PanelAccordion } from "@/components/panelAccordion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LogoHoverCard } from "@/components/logoHoverCard";
 import CarouselOrientation from "@/components/carousel";
+import { CondicionesAlertDialog } from "@/components/condiciones-alert-dialog";
+import { CondicionesInicialesHover } from "@/components/select-condiciones-hoover";
 
 const TrabajoPractico3 = () => {
   const [consigna, setConsigna] = useState("");
@@ -22,6 +24,13 @@ const TrabajoPractico3 = () => {
   const [isLoading3, setisLoading3] = useState<boolean>(false);
   const isAnyLoading = isLoading || isLoading1 || isLoading2 || isLoading3;
   const [isSidebarOpen, setSidebarOpen] = useState(false);
+  const [condicionesIniciales, setCondicionesIniciales] = useState<{
+    a: number;
+    b: number;
+    tol: number;
+    max_iter: number;
+  } | null>(null);
+  const [mostrarAlerta, setMostrarAlerta] = useState(false);
 
   const onClickIncisoA = () =>
     handleInciso1A({
@@ -50,14 +59,21 @@ const TrabajoPractico3 = () => {
       setIsLoading2: setisLoading2,
     });
 
-  const onClickInciso2B = () =>
+  const onClickInciso2B = () => {
+    if (!condicionesIniciales) {
+      setMostrarAlerta(true);
+      return;
+    }
+
     handleInciso2B({
       setConsigna,
       setSalidaConsola,
       setImagenes,
       setExperiencia,
       setIsLoading3: setisLoading3,
+      ...condicionesIniciales,
     });
+  };
 
   return (
     <div className="flex flex-row w-full min-h-screen ">
@@ -98,6 +114,13 @@ const TrabajoPractico3 = () => {
           </li>
           <li className="text-lg font-semibold px-2">Punto 2</li>
           <li>
+            <li>
+              <CondicionesInicialesHover
+                onChange={(val) => setCondicionesIniciales(val)}
+              />
+            </li>
+          </li>
+          <li>
             <IncisoButton
               label="Inciso a"
               onClick={onClickInciso2A}
@@ -126,6 +149,9 @@ const TrabajoPractico3 = () => {
       {/* Contenido principal */}
       <div className="flex-1 h-screen px-4 pt-10 lg:p-8 flex flex-col items-center">
         <div className="w-full max-w-5xl flex flex-col justify-start gap-6">
+          <h1 className="text-2xl font-bold text-center">
+            T.P.3: Búsqueda de raíces
+          </h1>
           <PanelAccordion
             titulo="Consigna a resolver"
             contenido={consigna}
@@ -145,7 +171,7 @@ const TrabajoPractico3 = () => {
           />
 
           {/* Gráficos */}
-          <div className="w-full h-auto border rounded-md p-4 bg-background shadow-sm">
+          <div className="w-full h-auto border rounded-md p-4 bg-background shadow-sm text-justify">
             <h2 className="text-xl font-semibold mb-2">Galería de gráficos</h2>
 
             {imagenes.length === 0 && !isAnyLoading && (
@@ -175,6 +201,11 @@ const TrabajoPractico3 = () => {
           </div>
         </div>
       </div>
+      {/* ALERTA de condiciones no seleccionadas */}
+      <CondicionesAlertDialog
+        open={mostrarAlerta}
+        onClose={() => setMostrarAlerta(false)}
+      />
     </div>
   );
 };

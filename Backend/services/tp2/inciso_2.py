@@ -4,9 +4,9 @@ import os
 
 # === Paths ===
 BASE_PATH = "data/tp2/"
-IMG_PORTADORA = os.path.join(BASE_PATH, "imagen_portadora.png")
+IMG_PORTADORA = os.path.join(BASE_PATH, "globo.png")
 IMG_OCULTA = os.path.join(BASE_PATH, "wp.png")
-IMG_ESTEGANOGRAFICA = os.path.join(BASE_PATH, "imagen_estego.tiff")
+IMG_ESTEGANOGRAFICA = os.path.join(BASE_PATH, "imagen_estego2.tiff")
 IMG_RECUPERADA = os.path.join(BASE_PATH, "imagen_recuperada.png")
 
 # === Variables globales (persistentes en el backend) ===

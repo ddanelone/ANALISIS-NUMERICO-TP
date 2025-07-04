@@ -5,7 +5,7 @@ from fastapi.responses import StreamingResponse
 import imageio.v3 as iio
 
 # === CONSTANTES ===
-PORTADORA_PATH = "data/tp2/imagen_portadora.png"
+PORTADORA_PATH = "data/tp2/globo.png"
 OCULTA_PATH = "data/tp2/wp.png"
 ESTEGO_PATH = "data/tp2/imagen_estego2.png"
 RECUPERADA_PATH = "data/tp2/imagen_recuperada2.png"

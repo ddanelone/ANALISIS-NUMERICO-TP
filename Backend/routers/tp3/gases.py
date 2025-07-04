@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Response
 from fastapi.responses import PlainTextResponse, StreamingResponse
+from models.tp3.gases import ParametrosIniciales
+from fastapi import Body
 
-from services.tp3.gases import EXPLICACION_INCISO_A, PROBLEMAS_INCISO_A, PROBLEMAS_INCISO_B, comparar_metodos_vdw, ejecutar_metodos_con_comparacion, generar_grafico_gases, generar_grafico_general, generar_grafico_volumenes_comparados, generar_grafico_zoom
-from services.tp3.presentacion_gases import generar_grafico_comparativo_gral, generar_grafico_comparativo_z
+from services.tp3.gases import EXPLICACION_INCISO_A, PROBLEMAS_INCISO_A, PROBLEMAS_INCISO_B, calcular_volumenes_con_params, comparar_metodos_vdw, ejecutar_metodos_con_comparacion, generar_grafico_gases, generar_grafico_general, generar_grafico_volumenes_comparados, generar_grafico_zoom, generar_imagen_error_volumen, seleccionar_raiz_valida
+from services.tp3.presentacion_gases import generar_grafico_comparativo_gral, generar_grafico_comparativo_z, generar_grafico_f_vdw
 
 router = APIRouter(
     prefix="/gases",
@@ -46,57 +48,106 @@ a partir de los resultados.
 """
     return consigna.strip()
 
-@router.get("/grafico-a")
-def grafico_gases():
-    buf = generar_grafico_gases()
+@router.post("/grafico-a")
+def grafico_gases(params: ParametrosIniciales = Body(...)):
+    resultados = calcular_volumenes_con_params(params)
+    buf = generar_grafico_gases(resultados)
     return StreamingResponse(buf, media_type="image/png")
 
-@router.get("/grafico-b")
-def grafico_gas():
+@router.post("/grafico-b")
+def grafico_gas_b(params: ParametrosIniciales = Body(...)):
     P = 0.5e6
     T = 200.0
     R = 8.314
-    b = 4.27e-5 
+    b = params.b
 
     v_ideal = R * T / P
 
-    # ✅ Intervalo adaptado a la presión (como en calcular_volumenes)
+    # Intervalo adaptado como en el otro endpoint
     a_ini = b * 1.01
     b_fin = v_ideal * 10
 
-    _, historial_combinado, _ = ejecutar_metodos_con_comparacion(a=a_ini, b=b_fin, P=P, T=T)
+    # VALIDACIÓN explícita del intervalo:
+    if a_ini >= b_fin or a_ini <= 0 or b_fin <= 0:
+       buf = generar_imagen_error_volumen()
+       return StreamingResponse(buf, media_type="image/png")
+
+    _, historial_combinado, _ = ejecutar_metodos_con_comparacion(
+        a=a_ini,
+        b=b_fin,
+        P=P,
+        T=T,
+        tol=params.tol,
+        max_iter=params.max_iter,
+        a_vdw=params.a,
+        b_vdw=params.b
+    )
 
     if not historial_combinado:
-        return {"error": "No se pudo calcular volumen real para graficar"}
+        buf = generar_imagen_error_volumen()
+        return StreamingResponse(buf, media_type="image/png")
 
     v_real = historial_combinado[-1]["x"]
 
     return generar_grafico_general(v_ideal, v_real, P, T)
 
-@router.get("/zoom")
-def grafico_zoom_gas():
+@router.post("/zoom")
+def grafico_zoom_gas(params: ParametrosIniciales = Body(...)):
     P = 0.5e6
     T = 200.0
     R = 8.314
-    b = 4.27e-5 
+    b = params.b
 
     v_ideal = R * T / P
 
-    # ✅ Usamos intervalo adaptado a la presión
     a_ini = b * 1.01
     b_fin = v_ideal * 10
 
-    _, historial_combinado, _ = ejecutar_metodos_con_comparacion(a=a_ini, b=b_fin, P=P, T=T)
+    _, historial_combinado, _ = ejecutar_metodos_con_comparacion(
+        a=a_ini,
+        b=b_fin,
+        P=P,
+        T=T,
+        tol=params.tol,
+        max_iter=params.max_iter,
+        a_vdw=params.a,
+        b_vdw=params.b
+    )
 
     if not historial_combinado:
-        return {"error": "No se pudo calcular volumen real para graficar"}
+        buf = generar_imagen_error_volumen()
+        return StreamingResponse(buf, media_type="image/png")
 
-    v_real = historial_combinado[-1]["x"]
+    # FILTRO coherente
+    candidatas = sorted(
+        (step for step in historial_combinado if abs(step.get("fx", float("inf"))) < 1e3),
+        key=lambda s: abs(s["fx"])
+    )
+
+    v_real = None
+    for step in candidatas:
+        xr = step["x"]
+        fx = abs(step["fx"])
+        if fx < 1e-4 and 0.8 < xr / v_ideal < 1.2:  # criterios para baja presión
+            v_real = xr
+            break
+
+    if v_real is None:
+        buf = generar_imagen_error_volumen()
+        return StreamingResponse(buf, media_type="image/png")
+
     return generar_grafico_zoom(v_real, P, T)
  
-@router.get("/taylor-vdw", response_class=PlainTextResponse)
-def aplicar_taylor_vdw():
-    return comparar_metodos_vdw() 
+@router.post("/taylor-vdw", response_class=PlainTextResponse)
+def aplicar_taylor_vdw(params: ParametrosIniciales = Body(...)):
+    return comparar_metodos_vdw(
+        P=0.5e6,
+        T=200.0,
+        a_vdw=params.a,
+        b_vdw=params.b,
+        tol=params.tol,
+        max_iter=params.max_iter
+    ) 
  
 @router.get("/explicacion-inciso-a", response_class=PlainTextResponse)
 def obtener_explicacion_inciso_a():
@@ -123,39 +174,101 @@ def grafico_comparacion_volumenes():
     imagen = generar_grafico_volumenes_comparados()
     return Response(content=imagen.getvalue(), media_type="image/png")
  
-# Cambio en la resolución del item b
-@router.get("/resultado")
-def resultado_taylor_05mpa():
+
+# Cambio en la resolución del item b y valores coherentes para el CO2
+"""
+ENCUENTRA RAICES
+{
+  "a": 0.364,
+  "b": 0.00004267,
+  "tol": 0.000001,
+  "max_iter": 50
+}
+{
+  "a": 0.364,
+  "b": 0.00004267,
+  "tol": 0.000001,
+  "max_iter": 50
+}
+{
+  "a": 0.364,
+  "b": 0.00004267,
+  "tol": 0.000001,
+  "max_iter": 50
+}
+{
+  "a": 0.364,
+  "b": 0.00004267,
+  "tol": 0.000001,
+  "max_iter": 50
+}
+{
+  "a": 0.364,
+  "b": 0.00004267,
+  "tol": 0.000001,
+  "max_iter": 50
+}
+NO TENDRÍA RAICES VÁLIDAS
+{
+  "a": 0.0001,
+  "b": 1.0,
+  "tol": 0.000001,
+  "max_iter": 50
+}
+{
+      "a": 0.00001,
+   "b": 0.1,
+   "tol": 0.000001,
+   "max_iter": 50
+}
+{
+  "a": 1e-4,
+  "b": 1e-2,
+  "tol": 1e-6,
+  "max_iter": 50
+}
+
+
+"""
+@router.post("/resultado")
+def resultado_taylor_05mpa(params: ParametrosIniciales):
     P = 0.5e6
     T = 200.0
-    R = 8.314  # J/(mol·K)
-    b = 4.27e-5 
+    R = 8.314
 
-    # Ejecutar ambos métodos con P y T correctos
     historial_taylor, historial_combinado, log = ejecutar_metodos_con_comparacion(
-        a=b * 1.01,
-        b=(R * T / P) * 10,
+        a=params.a,
+        b=params.b,
+        tol=params.tol,
+        max_iter=params.max_iter,
         P=P,
-        T=T
+        T=T,
+        a_vdw=params.a,
+        b_vdw=params.b,
+        R_local=R
     )
 
-    # Calcular volumen ideal
     v_ideal = R * T / P
 
-    # Extraer resultados de los métodos
-    v_taylor = historial_taylor[-1]["x"]
-    v_combinado = historial_combinado[-1]["x"]
+    v_taylor, dif_taylor = seleccionar_raiz_valida(historial_taylor, v_ideal, P)
+    v_combinado, dif_combinado = seleccionar_raiz_valida(historial_combinado, v_ideal, P)
 
-    dif_taylor = abs(v_taylor - v_ideal) / v_taylor * 100
-    dif_combinado = abs(v_combinado - v_ideal) / v_combinado * 100
+    def format_volumen(valor):
+        if valor is None:
+            return "❌ No se encontró raíz válida"
+        return f"{valor:.6e}"
 
     return {
         "mensaje": "Resolución del inciso 2.b con los métodos solicitados",
         "volumen_ideal": f"{v_ideal:.6e}",
-        "volumen_taylor": f"{v_taylor:.6e}",
-        "volumen_combinado": f"{v_combinado:.6e}",
-        "diferencia_taylor_%": f"{dif_taylor:.4f}",
-        "diferencia_combinado_%": f"{dif_combinado:.4f}",
+        "volumen_taylor": format_volumen(v_taylor),
+        "volumen_combinado": format_volumen(v_combinado),
+        "diferencia_taylor_%": f"{dif_taylor:.4f}%" if dif_taylor is not None else "N/A",
+        "diferencia_combinado_%": f"{dif_combinado:.4f}%" if dif_combinado is not None else "N/A",
         "log": log
     }
 
+@router.get("/grafico-f-vdw")
+def grafico_f_vdw():
+    buf = generar_grafico_f_vdw()
+    return StreamingResponse(buf, media_type="image/png")

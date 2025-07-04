@@ -28,7 +28,7 @@ export async function handleInciso1({
 
     // 🔁 Ocultar mensaje (simulado con texto hardcodeado)
     const mensaje = encodeURIComponent(
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
     );
     const ocultarURL = `${API_BASE_URL}/tp2/inciso_1/ocultar?mensaje=${mensaje}`;
 
@@ -61,8 +61,31 @@ ${respuestaExtraccion}
 
     setSalidaConsola(salidaFinal);
 
-    // (Opcional) cargar imágenes en el futuro
-    setImagenes([]);
+    // Cargar imágenes
+    const rutas = ["imagen-original", "imagen-estego"];
+    const imagenesUrls: string[] = [];
+
+    for (const ruta of rutas) {
+      try {
+        const res = await fetch(`${API_BASE_URL}/tp2/inciso_1/${ruta}`, {
+          method: "GET",
+          headers: { Accept: "image/png" },
+        });
+
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.warn(`Error cargando imagen ${ruta}: ${errorText}`);
+          continue;
+        }
+
+        const blob = await res.blob();
+        imagenesUrls.push(URL.createObjectURL(blob));
+      } catch (err) {
+        console.warn(`Excepción al cargar imagen ${ruta}:`, err);
+      }
+    }
+
+    setImagenes(imagenesUrls);
     setExperiencia("");
   } catch (error) {
     console.error("❌ Error general en handleInciso2 (TP2):", error);

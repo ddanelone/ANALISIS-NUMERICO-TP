@@ -6,7 +6,6 @@ export async function handleInciso3({
   setImagenes,
   setExperiencia,
   setIsLoading,
-  delta,
 }: {
   setConsigna: (val: string) => void;
   setSalidaConsola: (val: string) => void;
@@ -42,34 +41,6 @@ export async function handleInciso3({
 
     // Problemas → se renderiza en el accordion
     setExperiencia(problemasTexto || "Error cargando problemas.");
-
-    // Ejecutar POST para ocultar imagen con delta
-    const ocultarResp = await fetch(`${API_BASE_URL}/tp2/inciso_3/ocultar`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "text/plain",
-      },
-      body: JSON.stringify(delta),
-    });
-    if (!ocultarResp.ok) {
-      const errText = await ocultarResp.text();
-      throw new Error(`Error en ocultar imagen: ${errText}`);
-    }
-
-    // Ejecutar POST para extraer imagen con delta
-    const extraerResp = await fetch(`${API_BASE_URL}/tp2/inciso_3/extraer`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "text/plain",
-      },
-      body: JSON.stringify(delta),
-    });
-    if (!extraerResp.ok) {
-      const errText = await extraerResp.text();
-      throw new Error(`Error en extraer imagen: ${errText}`);
-    }
 
     // Cargar imágenes
     const rutas = ["portadora", "oculta", "estego", "recuperada"];

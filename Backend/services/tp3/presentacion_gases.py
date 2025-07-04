@@ -1,3 +1,4 @@
+import io
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import fsolve
@@ -8,6 +9,7 @@ R = 8.314  # J/(mol·K)
 a = 3.592 * 100  # J·L/mol²
 b = 0.0427  # L/mol
 n = 1  # mol
+T = 200.0  # K
 
 temperaturas = [150, 200, 250, 300]
 colores = ['blue', 'green', 'orange', 'red']
@@ -74,3 +76,55 @@ def generar_grafico_comparativo_z():
     plt.close()
     buffer.seek(0)
     return buffer
+
+def generar_grafico_f_vdw():
+    # Presiones a comparar
+    R = 8.314
+    T = 200.0
+    a = 0.364
+    b = 4.267e-5
+
+    presiones = {
+        "P = 5.0 MPa": 5e6,
+        "P = 0.5 MPa": 0.5e6
+    }
+
+    # Dominio de volumen molar restringido
+    v_vals = np.linspace(b * 1.01, 0.005, 1000)
+
+    # Función de Van der Waals
+    def f_vdw(v, P):
+        return (P + a / v**2) * (v - b) - R * T
+
+    # Crear gráfico
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    for etiqueta, P in presiones.items():
+        f_vals = []
+        for v in v_vals:
+            try:
+                f = f_vdw(v, P)
+                f_vals.append(f)
+            except:
+                f_vals.append(np.nan)
+
+        color = 'blue' if P > 1e6 else 'red'
+        ax.plot(v_vals, f_vals, label=etiqueta, color=color)
+
+    # Estética del gráfico
+    ax.axhline(0, color="gray", linestyle="--")
+    ax.axvline(b, color="black", linestyle=":", label=f"b = {b:.2e} m³/mol")
+    ax.set_xlim([b * 1.01, 0.005])  # type: ignore
+    ax.set_title("f(v) de Van der Waals (CO₂) - Comparación de presiones")
+    ax.set_xlabel("Volumen molar v (m³/mol)")
+    ax.set_ylabel("f(v)")
+    ax.grid(True)
+    ax.legend()
+    fig.tight_layout()
+
+    # Guardar imagen en buffer
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png")
+    plt.close(fig)
+    buf.seek(0)
+    return buf

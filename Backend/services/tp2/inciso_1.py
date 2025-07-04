@@ -1,6 +1,9 @@
+import io
 from PIL import Image
 import numpy as np
 import os
+from fastapi.responses import StreamingResponse
+
 
 # Paths fijos (pueden generalizarse después)
 IMAGEN_ORIGINAL_PATH = "data/tp2/imagen_portadora.png"
@@ -55,6 +58,41 @@ def extraer_mensaje_de_imagen() -> str:
     except Exception as e:
         return f"❌ Error al extraer mensaje: {str(e)}"
 
+def obtener_imagen_portadora() -> StreamingResponse:
+    imagen = Image.open(IMAGEN_ORIGINAL_PATH).convert("L")
+    buffer = io.BytesIO()
+    imagen.save(buffer, format="PNG")
+    buffer.seek(0)
+
+    return StreamingResponse(
+        buffer,
+        media_type="image/png",
+        headers={
+            "Content-Disposition": 'inline; filename="imagen_portadora.png"',
+            "Content-Type": "image/png",
+            "Cache-Control": "no-store"
+        }
+    )
+
+def obtener_imagen_estego() -> StreamingResponse:
+    if not os.path.exists(IMAGEN_ESTEGANOGRAFICA_PATH):
+        raise FileNotFoundError("La imagen estego no fue generada todavía.")
+
+    imagen = Image.open(IMAGEN_ESTEGANOGRAFICA_PATH).convert("L")
+    buffer = io.BytesIO()
+    imagen.save(buffer, format="PNG")
+    buffer.seek(0)
+
+    return StreamingResponse(
+        buffer,
+        media_type="image/png",
+        headers={
+            "Content-Disposition": 'inline; filename="imagen_estego.png"',
+            "Content-Type": "image/png",
+            "Cache-Control": "no-store"
+        }
+    )
+ 
 CONSIGNA_LSB = """
 1. Modificar el último bit significativo de cada píxel en una imagen original para ocultar un mensaje. Para ello,
 se deben seguir los siguientes pasos: Primero, utilizar una imagen en formato .png o .jpg. A continuación,
