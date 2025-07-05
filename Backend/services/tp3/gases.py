@@ -269,6 +269,93 @@ def seleccionar_raiz_valida(historial, v_ideal, P):
 
     return None, None
 
+def resolver_resultado_gas(params: ParametrosIniciales, P: float, T: float, R: float = 8.314):
+    v_ideal = R * T / P
+
+    # Interpretamos a y b como coeficientes de Van der Waals
+    a_vdw = params.a
+    b_vdw = params.b
+
+    # Generamos un intervalo inicial
+    a_ini = b_vdw * 1.01
+    b_fin = v_ideal * 10
+
+    f, _, _ = obtener_funciones_numericas(P, T, a_vdw, b_vdw, R)
+
+    # Validamos si el intervalo inicial es usable
+    if f(a_ini) * f(b_fin) >= 0:
+        nuevo_a, nuevo_b = encontrar_intervalo(f, v_ideal)
+
+        if nuevo_a is None or nuevo_b is None:
+            return {
+                "mensaje": "❌ No se encontró intervalo válido para aplicar los métodos.",
+                "volumen_ideal": f"{v_ideal:.6e}",
+                "volumen_taylor": "N/A",
+                "volumen_combinado": "N/A",
+                "diferencia_taylor_%": "N/A",
+                "diferencia_combinado_%": "N/A",
+                "log": "No se pudo validar el intervalo para aplicar Taylor ni el método combinado."
+            }
+
+        a_ini, b_fin = nuevo_a, nuevo_b
+
+    # Garantizar que no sean None (para Pylance y seguridad)
+    assert a_ini is not None and b_fin is not None, "Intervalo inválido"
+
+    # Ejecutar métodos
+    historial_taylor, historial_combinado, log = ejecutar_metodos_con_comparacion(
+        a=a_ini,
+        b=b_fin,
+        tol=params.tol,
+        max_iter=params.max_iter,
+        P=P,
+        T=T,
+        a_vdw=a_vdw,
+        b_vdw=b_vdw,
+        R_local=R
+    )
+
+    # Buscar raíces válidas
+    v_taylor, dif_taylor = seleccionar_raiz_valida(historial_taylor, v_ideal, P)
+    v_combinado, dif_combinado = seleccionar_raiz_valida(historial_combinado, v_ideal, P)
+
+    def format_volumen(valor):
+        if valor is None:
+            return "❌ No se encontró raíz válida"
+        return f"{valor:.6e}"
+
+    return {
+        "mensaje": "Resolución del inciso 2.b con los métodos solicitados",
+        "volumen_ideal": f"{v_ideal:.6e}",
+        "volumen_taylor": format_volumen(v_taylor),
+        "volumen_combinado": format_volumen(v_combinado),
+        "diferencia_taylor_%": f"{dif_taylor:.4f}%" if dif_taylor is not None else "N/A",
+        "diferencia_combinado_%": f"{dif_combinado:.4f}%" if dif_combinado is not None else "N/A",
+        "log": log
+    }
+
+
+    return {
+        "mensaje": "Resolución del inciso 2.b con los métodos solicitados",
+        "volumen_ideal": f"{v_ideal:.6e}",
+        "volumen_taylor": format_volumen(v_taylor),
+        "volumen_combinado": format_volumen(v_combinado),
+        "diferencia_taylor_%": f"{dif_taylor:.4f}%" if dif_taylor is not None else "N/A",
+        "diferencia_combinado_%": f"{dif_combinado:.4f}%" if dif_combinado is not None else "N/A",
+        "log": log
+    }
+
+
+    return {
+        "mensaje": "Resolución del inciso 2.b con los métodos solicitados",
+        "volumen_ideal": f"{v_ideal:.6e}",
+        "volumen_taylor": format_volumen(v_taylor),
+        "volumen_combinado": format_volumen(v_combinado),
+        "diferencia_taylor_%": f"{dif_taylor:.4f}%" if dif_taylor is not None else "N/A",
+        "diferencia_combinado_%": f"{dif_combinado:.4f}%" if dif_combinado is not None else "N/A",
+        "log": log
+    }
+
 # TERMINA MATAFUEGO
 
 def van_der_waals_eq(v, P, T):
@@ -368,14 +455,17 @@ def generar_grafico_gases(resultados):
 
 
 # --- Buscar intervalo válido ---
-def encontrar_intervalo(P, T, v_min=1e-5, v_max=1e-1, pasos=10000):
-    v_vals = np.linspace(v_min, v_max, pasos)
-    f_vals = [van_der_waals_eq(v, P, T) for v in v_vals]
-
-    for i in range(len(f_vals) - 1):
-        if f_vals[i] * f_vals[i + 1] < 0:
-            return v_vals[i], v_vals[i + 1]
+def encontrar_intervalo(f, v_inicial, ancho_inicial=0.01, max_iter=100):
+    """Busca un intervalo [a, b] tal que f(a)*f(b) < 0"""
+    ancho = ancho_inicial
+    for _ in range(max_iter):
+        a = max(v_inicial - ancho, 1e-6)
+        b = v_inicial + ancho
+        if f(a) * f(b) < 0:
+            return a, b
+        ancho *= 1.5
     return None, None
+
 
 def generar_grafico_general(v_ideal, v_real, P, T):
     # Margen visual para graficar

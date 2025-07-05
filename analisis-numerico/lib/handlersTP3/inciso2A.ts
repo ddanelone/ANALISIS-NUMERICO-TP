@@ -43,8 +43,8 @@ export async function handleInciso2A({
       "diferencia_taylor_%": number;
       "diferencia_combinado_%": number;
     }>(`${API_BASE_URL}/tp3/gases/resultado`, {
-      a: 0.35,
-      b: 0.000045,
+      a: 0.364,
+      b: 0.00004267,
       tol: 0.000001,
       max_iter: 50,
     });

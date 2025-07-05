@@ -3,7 +3,7 @@ from fastapi.responses import PlainTextResponse, StreamingResponse
 from models.tp3.gases import ParametrosIniciales
 from fastapi import Body
 
-from services.tp3.gases import EXPLICACION_INCISO_A, PROBLEMAS_INCISO_A, PROBLEMAS_INCISO_B, calcular_volumenes_con_params, comparar_metodos_vdw, ejecutar_metodos_con_comparacion, generar_grafico_gases, generar_grafico_general, generar_grafico_volumenes_comparados, generar_grafico_zoom, generar_imagen_error_volumen, seleccionar_raiz_valida
+from services.tp3.gases import EXPLICACION_INCISO_A, PROBLEMAS_INCISO_A, PROBLEMAS_INCISO_B, calcular_volumenes_con_params, comparar_metodos_vdw, ejecutar_metodos_con_comparacion, encontrar_intervalo, generar_grafico_gases, generar_grafico_general, generar_grafico_volumenes_comparados, generar_grafico_zoom, generar_imagen_error_volumen, obtener_funciones_numericas, resolver_resultado_gas, seleccionar_raiz_valida
 from services.tp3.presentacion_gases import generar_grafico_comparativo_gral, generar_grafico_comparativo_z, generar_grafico_f_vdw
 
 router = APIRouter(
@@ -185,26 +185,26 @@ ENCUENTRA RAICES
   "max_iter": 50
 }
 {
-  "a": 0.364,
-  "b": 0.00004267,
+  "a": 0.4,
+  "b": 0.00005,
   "tol": 0.000001,
   "max_iter": 50
 }
 {
-  "a": 0.364,
-  "b": 0.00004267,
+  "a": 0.35,
+  "b": 0.000045,
   "tol": 0.000001,
   "max_iter": 50
 }
 {
-  "a": 0.364,
-  "b": 0.00004267,
+  "a": 0.39,
+  "b": 0.000048,
   "tol": 0.000001,
   "max_iter": 50
 }
 {
-  "a": 0.364,
-  "b": 0.00004267,
+  "a": 0.37,
+  "b": 0.000046,
   "tol": 0.000001,
   "max_iter": 50
 }
@@ -232,41 +232,7 @@ NO TENDRÍA RAICES VÁLIDAS
 """
 @router.post("/resultado")
 def resultado_taylor_05mpa(params: ParametrosIniciales):
-    P = 0.5e6
-    T = 200.0
-    R = 8.314
-
-    historial_taylor, historial_combinado, log = ejecutar_metodos_con_comparacion(
-        a=params.a,
-        b=params.b,
-        tol=params.tol,
-        max_iter=params.max_iter,
-        P=P,
-        T=T,
-        a_vdw=params.a,
-        b_vdw=params.b,
-        R_local=R
-    )
-
-    v_ideal = R * T / P
-
-    v_taylor, dif_taylor = seleccionar_raiz_valida(historial_taylor, v_ideal, P)
-    v_combinado, dif_combinado = seleccionar_raiz_valida(historial_combinado, v_ideal, P)
-
-    def format_volumen(valor):
-        if valor is None:
-            return "❌ No se encontró raíz válida"
-        return f"{valor:.6e}"
-
-    return {
-        "mensaje": "Resolución del inciso 2.b con los métodos solicitados",
-        "volumen_ideal": f"{v_ideal:.6e}",
-        "volumen_taylor": format_volumen(v_taylor),
-        "volumen_combinado": format_volumen(v_combinado),
-        "diferencia_taylor_%": f"{dif_taylor:.4f}%" if dif_taylor is not None else "N/A",
-        "diferencia_combinado_%": f"{dif_combinado:.4f}%" if dif_combinado is not None else "N/A",
-        "log": log
-    }
+    return resolver_resultado_gas(params, P=0.5e6, T=200.0)
 
 @router.get("/grafico-f-vdw")
 def grafico_f_vdw():
